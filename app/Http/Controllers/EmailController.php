@@ -4,12 +4,9 @@ namespace App\Http\Controllers;
 
 use EchoLabs\Prism\Enums\Provider;
 use EchoLabs\Prism\Prism;
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Twilio\TwiML\VoiceResponse;
-
-use function Laravel\Prompts\textarea;
 
 class EmailController extends Controller
 {
@@ -18,9 +15,7 @@ class EmailController extends Controller
         $email = $request->input('SpeechResult');
         Log::info('Email recibido:', ['rawEmail' => $email]);
 
-
         $processedEmail = $this->checkEmailAi($email);
-
 
         Log::info('Email procesado por ai:', ['email' => $processedEmail]);
 
@@ -37,7 +32,7 @@ class EmailController extends Controller
             'hints' => 'Inditex, Mercadona, Telefónica, Iberdrola, BBVA, Repsol, Mapfre, Acciona, Endesa, Naturgy, Ferrovial, Aena, Mango, Zara, SEAT, Ford España, Volkswagen España, Samsung España'
         ]);
 
-        $gather->say("Gracias por facilitarnos tu email, " . $processedEmail . ". Ahora, por favor, indique el nombre de su empresa.", [
+        $gather->say("Gracias por facilitarnos tu email, " . $processedEmail . ". diga Sí, si es correcto, o diga Nó, si no lo es", [
             'language' => 'es-ES',
             'voice' => 'Polly.Conchita'
         ]);
