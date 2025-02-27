@@ -23,7 +23,7 @@ class EmailController extends Controller
         $gather = $response->gather([
             'input' => 'speech',
             'timeout' => 10,
-            'action' => url('/api/ProcessCompany'),
+            'action' => url('/api/ProcessEmail/CheckEmailYON'),
             'method' => 'POST',
             'language' => 'es-ES',
             'speechModel' => 'googlev2_long',
@@ -32,7 +32,7 @@ class EmailController extends Controller
             'hints' => 'Inditex, Mercadona, Telefónica, Iberdrola, BBVA, Repsol, Mapfre, Acciona, Endesa, Naturgy, Ferrovial, Aena, Mango, Zara, SEAT, Ford España, Volkswagen España, Samsung España'
         ]);
 
-        $gather->say("Gracias por facilitarnos tu email, " . $processedEmail . ". diga Sí, si es correcto, o diga Nó, si no lo es", [
+        $gather->say("Gracias por facilitarnos tu email, " . $processedEmail . ". diga sí o no si es o no correcto", [
             'language' => 'es-ES',
             'voice' => 'Polly.Conchita'
         ]);
@@ -71,12 +71,43 @@ class EmailController extends Controller
         return $response;
     }
 
+    public function CheckEmailYON(Request $request)
+    {
+        $YON = strtolower($request->input('SpeechResult'));
+        Log::info('Datos recibidos en processName:', ['YON' => $YON]);
+        $response = new VoiceResponse();
+        $name = $request->query('name', '');  
+
+        if ($YON == 'si' || $YON == 'sí') {
+            $response->say('Respondiste sí.', ['language' => 'es-ES']);
+            $gather = $response->gather([
+                'input' => 'speech',
+                'timeout' => '10',
+                'action' => url('/api/ProcessEmail'). '?name=' . urlencode($name),
+                'method' => 'POST',
+                'language' => 'es-ES',
+                'speechModel' => 'googlev2_long',
+                'bargeIn' => true,
+                'speechTimeout' => 'auto',
+            ]);
+            $gather->say('Ahora '.$name.' por favor facilítenos su email', ['language' => 'es-ES']);
+    
+            } elseif ($YON == 'no') {
+            $response->say('Respondiste no. Intentémoslo de nuevo.', ['language' => 'es-ES']);
+            $response->redirect(url('/api/ManageCall') . '?_method=GET'); // Volver a preguntar el nombre
+        } else {
+            $response->say('Por favor, responda únicamente con sí o no.', ['language' => 'es-ES']);
+
+            $response->redirect(url('/api/ProcessName') . '?name=' . urlencode($name)); 
+            
+        }
+        
+        return response($response->__toString(), 200)->header('Content-Type', 'text/xml');
+        
+    }
+
+
 }
-
-
-
-
-
 
 
  // // Procesamiento del email

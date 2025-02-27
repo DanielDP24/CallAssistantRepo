@@ -21,6 +21,12 @@ class NameController extends Controller
             Log::info('Datos recibidos en segunda vez:', ['name' => $name]);
       
         }
+        if (empty($name)) {
+            Log::info('El usuario no respondió. Repetimos la pregunta.');
+            $response->say('No escuché su nombre. Intentémoslo de nuevo.', ['language' => 'es-ES']);
+            $response->redirect(url('/api/ManageCall'). '?_method=GET'); 
+            return response($response)->header('Content-Type', 'text/xml');
+        }
         
         $gather = $response->gather([
             'input' => 'speech',
@@ -42,20 +48,21 @@ class NameController extends Controller
         $YON = strtolower($request->input('SpeechResult'));
         Log::info('Datos recibidos en processName:', ['YON' => $YON]);
         $response = new VoiceResponse();
+        $name = $request->query('name', '');  
 
         if ($YON == 'si' || $YON == 'sí') {
             $response->say('Respondiste sí.', ['language' => 'es-ES']);
             $gather = $response->gather([
                 'input' => 'speech',
                 'timeout' => '10',
-                'action' => url('/api/ProcessEmail'),
+                'action' => url('/api/ProcessEmail'). '?name=' . urlencode($name),
                 'method' => 'POST',
                 'language' => 'es-ES',
                 'speechModel' => 'googlev2_long',
                 'bargeIn' => true,
                 'speechTimeout' => 'auto',
             ]);
-            $gather->say('Ahora por favor facilítenos su email', ['language' => 'es-ES']);
+            $gather->say('Ahora '.$name.' por favor facilítenos su email', ['language' => 'es-ES']);
     
             } elseif ($YON == 'no') {
             $response->say('Respondiste no. Intentémoslo de nuevo.', ['language' => 'es-ES']);
@@ -63,7 +70,6 @@ class NameController extends Controller
         } else {
             $response->say('Por favor, responda únicamente con sí o no.', ['language' => 'es-ES']);
 
-            $name = $request->query('name', '');  
             $response->redirect(url('/api/ProcessName') . '?name=' . urlencode($name)); 
             
         }
