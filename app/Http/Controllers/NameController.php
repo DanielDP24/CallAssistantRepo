@@ -9,25 +9,24 @@ use Twilio\TwiML\VoiceResponse;
 class NameController extends Controller
 {
 
-    //RECIBIMOS EMAIL Y PREGUNTAMOS SI ES CORRECTO O NO
+    //RECIBIMOS nombre Y PREGUNTAMOS SI ES CORRECTO O NO
     public function processName(Request $request)
     {
         $response = new VoiceResponse();
-        $name = $request->input('SpeechResult');//esto recibe pepe
+        $name = $request->input('SpeechResult'); //esto recibe pepe
         Log::info('Datos recibidos en processName:', ['name' => $name]);
 
         if ($name == '' || $name  == null) {
-            $name = $request->query('name', '');  
+            $name = $request->query('name', '');
             Log::info('Datos recibidos en segunda vez:', ['name' => $name]);
-      
         }
         if (empty($name)) {
             Log::info('El usuario no respondió. Repetimos la pregunta.');
             $response->say('No escuché su nombre. Intentémoslo de nuevo.', ['language' => 'es-ES']);
-            $response->redirect(url('/api/ManageCall'). '?_method=GET'); 
+            $response->redirect(url('/api/ManageCall') . '?_method=GET');
             return response($response)->header('Content-Type', 'text/xml');
         }
-        
+
         $gather = $response->gather([
             'input' => 'speech',
             'timeout' => '10',
@@ -35,8 +34,8 @@ class NameController extends Controller
             'method' => 'POST',
             'language' => 'es-ES',
             'speechModel' => 'googlev2_long',
-            'bargeIn' => true,
             'speechTimeout' => 'auto',
+            'actionOnEmptyResult' => true
         ]);
         $gather->say('El nombre recibido es ' . $name . ', ¿Es correcto?, responda; si, o ,no.', ['language' => 'es-ES']);
 
@@ -45,36 +44,61 @@ class NameController extends Controller
 
     public function CheckNameYON(Request $request)
     {
+        $response = new VoiceResponse();
+
         $YON = strtolower($request->input('SpeechResult'));
         Log::info('Datos recibidos en processName:', ['YON' => $YON]);
-        $response = new VoiceResponse();
-        $name = $request->query('name', '');  
+        $name = $request->query('name', '');
+
+        if (empty($YON)) {
+            Log::info('El usuario no respondió al si o no. Repetimos la pregunta.');
+            $response->say('No escuché su respuesta. Intentémoslo de nuevo.', ['language' => 'es-ES']);
+            $response->redirect(url('/api/ProcessName') . '?name=' . urlencode($name));
+            return response($response)->header('Content-Type', 'text/xml');
+        }
 
         if ($YON == 'si' || $YON == 'sí') {
             $response->say('Respondiste sí.', ['language' => 'es-ES']);
-            $gather = $response->gather([
-                'input' => 'speech',
-                'timeout' => '10',
-                'action' => url('/api/ProcessEmail'). '?name=' . urlencode($name),
-                'method' => 'POST',
+            return $this->AskEmail($request);
+        } elseif ($YON == 'no') {
+            $response->say('Respondiste no. Intentémoslo de nuevo.', [
                 'language' => 'es-ES',
-                'speechModel' => 'googlev2_long',
-                'bargeIn' => true,
-                'speechTimeout' => 'auto',
+                'voice' => 'Polly.Conchita',
+                'rate' => '1.2'
             ]);
-            $gather->say('Ahora '.$name.' por favor facilítenos su email', ['language' => 'es-ES']);
-    
-            } elseif ($YON == 'no') {
-            $response->say('Respondiste no. Intentémoslo de nuevo.', ['language' => 'es-ES']);
             $response->redirect(url('/api/ManageCall') . '?_method=GET'); // Volver a preguntar el nombre
         } else {
-            $response->say('Por favor, responda únicamente con sí o no.', ['language' => 'es-ES']);
+            $response->say('Por favor, responda únicamente con sí o no.', [
+                'language' => 'es-ES',
+                'voice' => 'Polly.Conchita',
+                'rate' => '1.2'
+            ]);
 
-            $response->redirect(url('/api/ProcessName') . '?name=' . urlencode($name)); 
-            
+            $response->redirect(url('/api/ProcessName') . '?name=' . urlencode($name));
         }
-        
+
         return response($response->__toString(), 200)->header('Content-Type', 'text/xml');
-        
+    }
+
+    public function AskEmail(Request $request)
+    {
+        $response = new VoiceResponse();
+        $name = $request->query('name', '');
+        $gather = $response->gather([
+            'input' => 'speech',
+            'timeout' => '10',
+            'action' => url('/api/ProcessEmail') . '?name=' . urlencode($name),
+            'method' => 'POST',
+            'language' => 'es-ES',
+            'speechModel' => 'googlev2_long',
+            'speechTimeout' => 'auto',
+        ]);
+        $gather->say('Ahora ' . $name . ' por favor facilítenos su email', [
+            'language' => 'es-ES',
+            'voice' => 'Polly.Conchita',
+            'rate' => '1.2'
+        ]);
+
+        return $response;
     }
 }

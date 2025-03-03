@@ -13,7 +13,12 @@ class EmailController extends Controller
     public function processEmail(Request $request)
     {
         $email = $request->input('SpeechResult');
+
+        if (empty($email)){
+            
+        }
         Log::info('Email recibido:', ['rawEmail' => $email]);
+        $name = $request->query('name', '');  
 
         $processedEmail = $this->checkEmailAi($email);
 
@@ -23,7 +28,7 @@ class EmailController extends Controller
         $gather = $response->gather([
             'input' => 'speech',
             'timeout' => 10,
-            'action' => url('/api/ProcessEmail/CheckEmailYON'),
+            'action' => url('/api/ProcessEmail/CheckEmailYON'). '?email=' . urlencode($processedEmail) . '&name=' . urlencode($name),
             'method' => 'POST',
             'language' => 'es-ES',
             'speechModel' => 'googlev2_long',
@@ -32,7 +37,7 @@ class EmailController extends Controller
             'hints' => 'Inditex, Mercadona, Telefónica, Iberdrola, BBVA, Repsol, Mapfre, Acciona, Endesa, Naturgy, Ferrovial, Aena, Mango, Zara, SEAT, Ford España, Volkswagen España, Samsung España'
         ]);
 
-        $gather->say("Gracias por facilitarnos tu email, " . $processedEmail . ". diga sí o no si es o no correcto", [
+        $gather->say("Gracias por facilitarnos tu email, " . $processedEmail . ". Ahora diga sí o no si es o no correcto", [
             'language' => 'es-ES',
             'voice' => 'Polly.Conchita'
         ]);
@@ -77,26 +82,36 @@ class EmailController extends Controller
         Log::info('Datos recibidos en processName:', ['YON' => $YON]);
         $response = new VoiceResponse();
         $name = $request->query('name', '');  
+        $email = $request->query('email', '');  
+
 
         if ($YON == 'si' || $YON == 'sí') {
-            $response->say('Respondiste sí.', ['language' => 'es-ES']);
+            $response->say('Respondiste sí.', [ 'language' => 'es-ES',
+            'voice' => 'Polly.Conchita',
+            'rate' => '1.2']);
             $gather = $response->gather([
                 'input' => 'speech',
                 'timeout' => '10',
-                'action' => url('/api/ProcessEmail'). '?name=' . urlencode($name),
+                'action' => url('/api/ProcessCompany'). '?name=' . urlencode($name). '?email=' . urlencode($email) ,
                 'method' => 'POST',
                 'language' => 'es-ES',
                 'speechModel' => 'googlev2_long',
                 'bargeIn' => true,
                 'speechTimeout' => 'auto',
             ]);
-            $gather->say('Ahora '.$name.' por favor facilítenos su email', ['language' => 'es-ES']);
+            $gather->say('Ahora '.$name.' por favor facilítenos el nombre de su empresa', [ 'language' => 'es-ES',
+            'voice' => 'Polly.Conchita',
+            'rate' => '1.2']);
     
             } elseif ($YON == 'no') {
-            $response->say('Respondiste no. Intentémoslo de nuevo.', ['language' => 'es-ES']);
-            $response->redirect(url('/api/ManageCall') . '?_method=GET'); // Volver a preguntar el nombre
+            $response->say('Respondiste no. Intentémoslo de nuevo.', [ 'language' => 'es-ES',
+            'voice' => 'Polly.Conchita',
+            'rate' => '1.2']);
+            $response->redirect(url('/api/ProcessEmail'). '?name='. urlencode($name)); // Volver a preguntar el email
         } else {
-            $response->say('Por favor, responda únicamente con sí o no.', ['language' => 'es-ES']);
+            $response->say('Por favor, responda únicamente con sí o no.', [ 'language' => 'es-ES',
+            'voice' => 'Polly.Conchita',
+            'rate' => '1.2']);
 
             $response->redirect(url('/api/ProcessName') . '?name=' . urlencode($name)); 
             
