@@ -34,11 +34,11 @@ class EmailController extends Controller
     
         $gather = $response->gather([
             'input'               => 'speech',
-            'timeout'             => 10,
+            'timeout'             => 5,
             'action'              => url('/api/ProcessEmail/CheckEmailYON') . '?name=' . urlencode($name) . '&email=' . urlencode($processedEmail),
             'method'              => 'POST',
             'language'            => 'es-ES',
-            'speechModel'         => 'googlev2_long',
+            'speechModel'         => 'googlev2_short',
             'bargeIn'             => true,
             'speechTimeout'       => 2,
             'hints'               => 'Inditex, Mercadona, Telefónica, Iberdrola, BBVA, Repsol, Mapfre, Acciona, Endesa, Naturgy, Ferrovial, Aena, Mango, Zara, SEAT, Ford España, Volkswagen España, Samsung España',
@@ -110,12 +110,11 @@ class EmailController extends Controller
         $email = $request->query('email', '');
         $gather = $response->gather([
             'input' => 'speech',
-            'timeout' => '10',
+            'timeout' => '8',
             'action' => url('/api/ProcessCompany') . '?name=' . urlencode($name) . '&email=' . urlencode($email),
             'method' => 'POST',
             'language' => 'es-ES',
-            'speechModel' => 'googlev2_long',
-            'bargeIn' => true,
+            'speechModel' => 'googlev2_short',
             'speechTimeout' => 'auto',
             'actionOnEmptyResult' => true
         ]);

@@ -29,11 +29,11 @@ class NameController extends Controller
 
         $gather = $response->gather([
             'input' => 'speech',
-            'timeout' => '10',
+            'timeout' => '8',
             'action' => url('/api/ProcessName/CheckNameYON') . '?name=' . urlencode($name),
             'method' => 'POST',
             'language' => 'es-ES',
-            'speechModel' => 'googlev2_long',
+            'speechModel' => 'googlev2_short',
             'speechTimeout' => 'auto',
             'actionOnEmptyResult' => true
         ]);
@@ -90,7 +90,7 @@ class NameController extends Controller
             'action' => url('/api/ProcessEmail') . '?name=' . urlencode($name),
             'method' => 'POST',
             'language' => 'es-ES',
-            'speechModel' => 'googlev2_long',
+            'speechModel' => 'googlev2_short',
             'speechTimeout' => 'auto',
             'actionOnEmptyResult' => true
         ]);
