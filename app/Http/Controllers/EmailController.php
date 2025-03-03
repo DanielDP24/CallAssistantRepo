@@ -14,40 +14,117 @@ class EmailController extends Controller
     {
         $response = new VoiceResponse();
         $email = $request->input('SpeechResult');
-        $name = $request->query('name', '');  
-
-        if (empty($email)){
+        $name = $request->query('name', '');
+        $email2 = $request->query('email', '');
+    
+        if (!empty($email2)) {
+            $email = $email2;
+        }
+        if (empty($email)) {
             Log::info('El usuario no respondió al email. Repetimos la pregunta.');
-            $response->say('No escuché su respuesta. Intentémoslo de nuevo.', ['language' => 'es-ES']);
             $response->redirect(url('/api/ProcessEmail/AskEmail') . '?name=' . urlencode($name));
             return response($response)->header('Content-Type', 'text/xml');
         }
+    
         Log::info('Email recibido:', ['rawEmail' => $email]);
-
+    
         $processedEmail = $this->checkEmailAi($email);
-
+    
         Log::info('Email procesado por ai:', ['email' => $processedEmail]);
-
+    
+        $gather = $response->gather([
+            'input'               => 'speech',
+            'timeout'             => 10,
+            'action'              => url('/api/ProcessEmail/CheckEmailYON') . '?name=' . urlencode($name) . '&email=' . urlencode($processedEmail),
+            'method'              => 'POST',
+            'language'            => 'es-ES',
+            'speechModel'         => 'googlev2_long',
+            'bargeIn'             => true,
+            'speechTimeout'       => 2,
+            'hints'               => 'Inditex, Mercadona, Telefónica, Iberdrola, BBVA, Repsol, Mapfre, Acciona, Endesa, Naturgy, Ferrovial, Aena, Mango, Zara, SEAT, Ford España, Volkswagen España, Samsung España',
+            'actionOnEmptyResult' => true
+        ]);
+    
+        $gather->say("El email facilitado es, " . $processedEmail . ". Ahora diga sí o no si es o no correcto", [
+            'language' => 'es-ES',
+            'voice'    => 'Polly.Conchita'
+        ]);
+    
+        return response($response)->header('Content-Type', 'text/xml');
+    }
+    
+    public function CheckEmailYON(Request $request)
+    {
+        $YON = strtolower($request->input('SpeechResult'));
+        Log::info('El usuario YON', ['YON EMAIL' => $YON]);
+    
+        $name = $request->query('name', '');
+        $email = $request->query('email', '');
+    
+        $response = new VoiceResponse();
+    
+        // Se elimina la segunda condición redundante
+        if (empty($YON)) {
+            Log::info('El usuario no respondió al si o no del email. Repetimos la pregunta.');
+            $response->say('No le hemos escuchado.', [
+                'language' => 'es-ES',
+                'voice'    => 'Polly.Conchita',
+                'rate'     => '1.2'
+            ]);
+            $response->redirect(url('/api/ProcessEmail') . '?name=' . urlencode($name) . '&email=' . urlencode($email));
+            return response($response)->header('Content-Type', 'text/xml');
+        }
+    
+        Log::info('Datos recibidos en processName:', ['YON' => $YON]);
+    
+        if ($YON == 'si' || $YON == 'sí') {
+            $response->say('Respondiste sí.', [
+                'language' => 'es-ES',
+                'voice'    => 'Polly.Conchita',
+                'rate'     => '1.2'
+            ]);
+            return $this->AskCompany($request);
+        } elseif ($YON == 'no') {
+            $response->say('Respondiste no. Intentémoslo de nuevo.', [
+                'language' => 'es-ES',
+                'voice'    => 'Polly.Conchita',
+                'rate'     => '1.2'
+            ]);
+            $response->redirect(url('/api/ProcessEmail/AskEmail') . '?name=' . urlencode($name));
+        } else {
+            $response->say('Por favor, responda únicamente con sí o no.', [
+                'language' => 'es-ES',
+                'voice'    => 'Polly.Conchita',
+                'rate'     => '1.2'
+            ]);
+            $response->redirect(url('/api/ProcessEmail') . '?name=' . urlencode($name) . '&email=' . urlencode($email));
+        }
+    
+        return response($response->__toString(), 200)->header('Content-Type', 'text/xml');
+    }
+    
+    public function AskCompany(Request $request)
+    {
+        $response = new VoiceResponse();
+        $name = $request->query('name', '');
+        $email = $request->query('email', '');
         $gather = $response->gather([
             'input' => 'speech',
-            'timeout' => 10,
-            'action' => url('/api/ProcessEmail/CheckEmailYON'). '?email=' . urlencode($processedEmail) . '&name=' . urlencode($name),
+            'timeout' => '10',
+            'action' => url('/api/ProcessCompany') . '?name=' . urlencode($name) . '&email=' . urlencode($email),
             'method' => 'POST',
             'language' => 'es-ES',
             'speechModel' => 'googlev2_long',
             'bargeIn' => true,
-            'speechTimeout' => 2,
-            'hints' => 'Inditex, Mercadona, Telefónica, Iberdrola, BBVA, Repsol, Mapfre, Acciona, Endesa, Naturgy, Ferrovial, Aena, Mango, Zara, SEAT, Ford España, Volkswagen España, Samsung España'
+            'speechTimeout' => 'auto',
         ]);
-
-        $gather->say("Gracias por facilitarnos tu email, " . $processedEmail . ". Ahora diga sí o no si es o no correcto", [
+        $gather->say('Ahora ' . $name . ' por favor facilítenos el nombre de su empresa', [
             'language' => 'es-ES',
-            'voice' => 'Polly.Conchita'
+            'voice' => 'Polly.Conchita',
+            'rate' => '1.2'
         ]);
-
-        return response($response)->header('Content-Type', 'text/xml');
+        return $response;
     }
-
     public function checkEmailAi($email)
     {
 
@@ -64,7 +141,11 @@ class EmailController extends Controller
         is likely to be transcribed as "de dominguez arroba airzone control punto com". 
         
         Also, the user can give explanations for emails like "double a in the middle", meaning the "a" in the middle is double like "aa". 
-        This is just an example, but keep in mind that the user can give instructions.
+        This is just an example, but keep in mind that the user can give instructions: 
+        
+        Example: "my email is Jose Maria all joined arroba Airzone Control punto com" so you will return josemaria@airzonecontrol.com
+        
+        If provided is "airsoft" swap it for airzonecontrol 
 
         You just return the email, nothing else.
         
@@ -78,53 +159,6 @@ class EmailController extends Controller
 
         return $response;
     }
-
-    public function CheckEmailYON(Request $request)
-    {
-        $YON = strtolower($request->input('SpeechResult'));
-        Log::info('Datos recibidos en processName:', ['YON' => $YON]);
-        $response = new VoiceResponse();
-        $name = $request->query('name', '');  
-        $email = $request->query('email', '');  
-
-
-        if ($YON == 'si' || $YON == 'sí') {
-            $response->say('Respondiste sí.', [ 'language' => 'es-ES',
-            'voice' => 'Polly.Conchita',
-            'rate' => '1.2']);
-            $gather = $response->gather([
-                'input' => 'speech',
-                'timeout' => '10',
-                'action' => url('/api/ProcessCompany'). '?name=' . urlencode($name). '?email=' . urlencode($email) ,
-                'method' => 'POST',
-                'language' => 'es-ES',
-                'speechModel' => 'googlev2_long',
-                'bargeIn' => true,
-                'speechTimeout' => 'auto',
-            ]);
-            $gather->say('Ahora '.$name.' por favor facilítenos el nombre de su empresa', [ 'language' => 'es-ES',
-            'voice' => 'Polly.Conchita',
-            'rate' => '1.2']);
-    
-            } elseif ($YON == 'no') {
-            $response->say('Respondiste no. Intentémoslo de nuevo.', [ 'language' => 'es-ES',
-            'voice' => 'Polly.Conchita',
-            'rate' => '1.2']);
-            $response->redirect(url('/api/ProcessEmail'). '?name='. urlencode($name)); // Volver a preguntar el email
-        } else {
-            $response->say('Por favor, responda únicamente con sí o no.', [ 'language' => 'es-ES',
-            'voice' => 'Polly.Conchita',
-            'rate' => '1.2']);
-
-            $response->redirect(url('/api/ProcessName') . '?name=' . urlencode($name)); 
-            
-        }
-        
-        return response($response->__toString(), 200)->header('Content-Type', 'text/xml');
-        
-    }
-
-
 }
 
 
