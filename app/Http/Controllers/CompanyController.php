@@ -81,7 +81,11 @@ class CompanyController extends Controller
     public function CheckCompanyYON(Request $request)
     {
         $response = new VoiceResponse();
+        $emailController = new EmailController();
+
         $YON = strtolower($request->input('SpeechResult'));
+        $YON =  $emailController->checkAnswerYONAI($YON);
+        
         Log::info('Datos recibidos en CheckCompanyYON:', ['YON' => $YON]);
         $name  = $request->query('name', '');
         $email = $request->query('email', '');

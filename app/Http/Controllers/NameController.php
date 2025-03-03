@@ -45,8 +45,11 @@ class NameController extends Controller
     public function CheckNameYON(Request $request)
     {
         $response = new VoiceResponse();
+        $emailController = new EmailController();
 
         $YON = strtolower($request->input('SpeechResult'));
+        $YON =  $emailController->checkAnswerYONAI($YON);
+
         Log::info('Datos recibidos en processName:', ['YON' => $YON]);
         $name = $request->query('name', '');
 
@@ -102,4 +105,6 @@ class NameController extends Controller
 
         return $response;
     }
+
+    
 }

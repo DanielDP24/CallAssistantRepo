@@ -57,7 +57,9 @@ class EmailController extends Controller
     {
         $YON = strtolower($request->input('SpeechResult'));
         Log::info('El usuario YON', ['YON EMAIL' => $YON]);
-    
+        //COMPROBAMOS SI RESPUESTA NEGATIVA O POSITIVA
+        $YON = $this->checkAnswerYONAi($YON);
+
         $name = $request->query('name', '');
         $email = $request->query('email', '');
     
@@ -150,6 +152,31 @@ class EmailController extends Controller
         You just return the email, nothing else.
         
         The email provided is: "$email" 
+        EOT;
+
+        $response = Prism::text()
+            ->using(Provider::OpenAI, 'gpt-4o-mini')
+            ->withPrompt($prompt)
+            ->generate()->text;
+
+        return $response;
+    }
+
+    public function checkAnswerYONAi($YON)
+    {
+        Log::info('YON recibido:' . $YON);
+        if (empty($YON)) {
+            return "Email vacio";
+        }
+
+        $prompt = <<<EOT
+        You are a professional conversational assistant. 
+        Your task is to listen to and analyze user responses that may include phrases such as 
+        "yes", "no", "that's fine", "it's correct", "that's wrong", "I want to repeat", or "isn't it so".
+         Using your advanced natural language understanding and contextual analysis, deduce whether the 
+         response is positive (affirmative) or negative. If the response is positive, simply output "si". 
+         If it is negative or non-affirmative, output "no". Ensure your decision is based on all the 
+         nuances present in the user's input."$YON" 
         EOT;
 
         $response = Prism::text()
