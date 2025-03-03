@@ -10,9 +10,25 @@ class CompanyController extends Controller
 {
     public function processCompany(Request $request)
     {
+        $response = new VoiceResponse();
         $company  = $request->input('SpeechResult');
+        $name = $request->query('name', '');
+        $email = $request->query('email', '');
+       
+        if (empty($company)) {
+            Log::info('El usuario no respondió a company. Repetimos la pregunta.');
+            $response->say('No le hemos escuchado.', [
+                'language' => 'es-ES',
+                'voice'    => 'Polly.Conchita',
+                'rate'     => '1.2'
+            ]);
+            $response->redirect(url('/api/ProcessCompany/AskCompany') . '?name=' . urlencode($name) . '&email=' . urlencode($email));
+            return response($response)->header('Content-Type', 'text/xml');
+        }
+
         $processedCompany = preg_replace([
             '/ punto /i',
+            '/ air /i',
             '/ nzone /i',
             '/ erzone /i',
             '/ air son /i',
@@ -26,11 +42,10 @@ class CompanyController extends Controller
             '/ aizona /i',
             '/ en zona /i',
             '/ airzoné /i'
-        ], ['.', 'Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone'], $company);
+        ], ['.', 'Airzone','Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone'], $company);
 
         Log::info('Datos recibidos en processCompany:', ['company' => $processedCompany]);
 
-        $response = new VoiceResponse();
         $gather = $response->gather([
             'input'         => 'speech',
             'timeout'       => 10,

@@ -117,6 +117,7 @@ class EmailController extends Controller
             'speechModel' => 'googlev2_long',
             'bargeIn' => true,
             'speechTimeout' => 'auto',
+            'actionOnEmptyResult' => true
         ]);
         $gather->say('Ahora ' . $name . ' por favor facilítenos el nombre de su empresa', [
             'language' => 'es-ES',

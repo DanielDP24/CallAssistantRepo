@@ -22,6 +22,7 @@ Route::post('/ProcessEmail/AskEmail', [NameController::class, 'AskEmail']);//com
 //Preguntamos por la empresa
 Route::post('/ProcessCompany', [CompanyController::class, 'processCompany']); //preguntamos si o no.
 Route::post('/ProcessCompany/CheckCompanyYON', [CompanyController::class, 'CheckCompanyYON']); //Comprobamos el sí o no
+Route::post('/ProcessCompany/AskCompany', [EmailController::class, 'AskCompany']);//comprobamos el sí o no
 
 //POST Info solicitada
 Route::post('/CreateTicket', [HubSpotController::class, 'CreateTicket']);//Creamos el ticket mientras le decimos sus datos y le avisamos que se le va a redirigir
