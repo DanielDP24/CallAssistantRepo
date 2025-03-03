@@ -175,7 +175,8 @@ class EmailController extends Controller
         "yes", "no", "that's fine", "it's correct", "that's wrong", "I want to repeat", or "isn't it so".
          Using your advanced natural language understanding and contextual analysis, deduce whether the 
          response is positive (affirmative) or negative. If the response is positive, simply output "si". 
-         If it is negative or non-affirmative, output "no". Ensure your decision is based on all the 
+         If it is negative or non-affirmative, output "no" any other case just answer no. 
+         No other possibility than the answers "si" or "no". Ensure your decision is based on all the 
          nuances present in the user's input."$YON" 
         EOT;
 

@@ -63,7 +63,6 @@ class CompanyController extends Controller
             'method'        => 'POST',
             'language'      => 'es-ES',
             'speechModel'   => 'googlev2_short',
-            'bargeIn'       => true,
             'speechTimeout' => 2
         ]);
         $gather->say(
@@ -85,7 +84,7 @@ class CompanyController extends Controller
 
         $YON = strtolower($request->input('SpeechResult'));
         $YON =  $emailController->checkAnswerYONAI($YON);
-        
+
         Log::info('Datos recibidos en CheckCompanyYON:', ['YON' => $YON]);
         $name  = $request->query('name', '');
         $email = $request->query('email', '');
