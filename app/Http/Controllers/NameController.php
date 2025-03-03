@@ -92,6 +92,7 @@ class NameController extends Controller
             'language' => 'es-ES',
             'speechModel' => 'googlev2_long',
             'speechTimeout' => 'auto',
+            'actionOnEmptyResult' => true
         ]);
         $gather->say('Ahora ' . $name . ' por favor facilítenos su email', [
             'language' => 'es-ES',

@@ -16,6 +16,8 @@ Route::post('/ProcessName/CheckNameYON', [NameController::class, 'CheckNameYON']
 //Preguntamos email
 Route::post('/ProcessEmail', [EmailController::class, 'processEmail']); //Preguntamos si o no.
 Route::post('/ProcessEmail/CheckEmailYON', [EmailController::class, 'CheckEmailYON']);//comprobamos el sí o no
+Route::post('/ProcessEmail/AskEmail', [NameController::class, 'AskEmail']);//comprobamos el sí o no
+
 
 //Preguntamos por la empresa
 Route::post('/ProcessCompany', [CompanyController::class, 'processCompany']); //preguntamos si o no.

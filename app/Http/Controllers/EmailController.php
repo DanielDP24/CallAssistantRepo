@@ -12,19 +12,22 @@ class EmailController extends Controller
 {
     public function processEmail(Request $request)
     {
+        $response = new VoiceResponse();
         $email = $request->input('SpeechResult');
+        $name = $request->query('name', '');  
 
         if (empty($email)){
-            
+            Log::info('El usuario no respondió al email. Repetimos la pregunta.');
+            $response->say('No escuché su respuesta. Intentémoslo de nuevo.', ['language' => 'es-ES']);
+            $response->redirect(url('/api/ProcessEmail/AskEmail') . '?name=' . urlencode($name));
+            return response($response)->header('Content-Type', 'text/xml');
         }
         Log::info('Email recibido:', ['rawEmail' => $email]);
-        $name = $request->query('name', '');  
 
         $processedEmail = $this->checkEmailAi($email);
 
         Log::info('Email procesado por ai:', ['email' => $processedEmail]);
 
-        $response = new VoiceResponse();
         $gather = $response->gather([
             'input' => 'speech',
             'timeout' => 10,
