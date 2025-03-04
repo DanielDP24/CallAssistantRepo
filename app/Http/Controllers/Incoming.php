@@ -12,9 +12,9 @@ class Incoming extends Controller
     {
         $response = new VoiceResponse();
 
-        $response->say('Hola, has llamado a Airzone.', [ 'language' => 'es-ES',
-        'voice' => 'Polly.Mia',
-        'rate' => '1.2']);
+        $response->say('Hola, has llamado a Airzone. Le solicitaremos unos datos antes de redirigirle con uno de nuestros agentes; ', [ 'language' => 'es-ES',
+        'voice' => 'Polly.Lucia-Neural',
+        'rate' => '1.1']);
 
         $gather = $response->gather([
             'input'         => 'speech',
@@ -29,8 +29,8 @@ class Incoming extends Controller
 
         $gather->say('Por favor, dígame su nombre', [
             'language' => 'es-ES',
-            'voice' => 'Polly.Mia',
-            'rate' => '1.2'
+            'voice' => 'Polly.Lucia-Neural',
+            'rate' => '1.1'
         ]);
         return $response;
     }
@@ -41,10 +41,9 @@ class Incoming extends Controller
     
         Log::info('Redirigiendo la llamada de ' . $request->input('Caller') . ' a +34615581444');
     
-        $response->say('Estamos transfiriendo su llamada...', [
-            'language' => 'es-ES',
-            'voice' => 'Polly.Mia'
-        ]);
+        $response->say('Estamos transfiriendo su llamada...',[ 'language' => 'es-ES',
+        'voice' => 'Polly.Lucia-Neural',
+        'rate' => '1.1']);
     
         // Transferimos la llamada en curso al número de destino
         $dial = $response->dial('answerOnBridge="true"');

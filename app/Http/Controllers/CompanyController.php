@@ -18,11 +18,9 @@ class CompanyController extends Controller
 
         if (empty($company)) {
             Log::info('El usuario no respondió a company. Repetimos la pregunta.');
-            $response->say('No le hemos escuchado.', [
-                'language' => 'es-ES',
-                'voice'    => 'Polly.Conchita',
-                'rate'     => '1.2'
-            ]);
+            $response->say('No le hemos escuchado.', [ 'language' => 'es-ES',
+            'voice' => 'Polly.Lucia-Neural',
+            'rate' => '1.1']);
             $response->redirect(url('/api/ProcessCompany/AskCompany') . '?name=' . urlencode($name) . '&email=' . urlencode($email));
             return response($response)->header('Content-Type', 'text/xml');
         }
@@ -81,11 +79,9 @@ class CompanyController extends Controller
         ]);
         $gather->say(
             'Gracias por facilitarnos el nombre de su empresa, ' . $processedCompany,
-            [
-                'language' => 'es-ES',
-                'voice'    => 'Polly.Conchita',
-                'rate'     => '1.2'
-            ]
+            [ 'language' => 'es-ES',
+        'voice' => 'Polly.Lucia-Neural',
+        'rate' => '1.1']
         );
 
         return response($response->__toString(), 200)->header('Content-Type', 'text/xml');
@@ -105,32 +101,26 @@ class CompanyController extends Controller
 
         if (empty($YON)) {
             Log::info('El usuario no respondió al sí o no. Repetimos la pregunta.');
-            $response->say('No escuché su respuesta. Intentémoslo de nuevo.', [
-                'language' => 'es-ES'
-            ]);
+            $response->say('No escuché su respuesta. Intentémoslo de nuevo.', [ 'language' => 'es-ES',
+            'voice' => 'Polly.Lucia-Neural',
+            'rate' => '1.1']);
             $response->redirect(url('/api/ProcessCompany/AskCompany') . '?name=' . urlencode($name) . '&email=' . urlencode($email));
             return response($response)->header('Content-Type', 'text/xml');
         }
 
         if ($YON == 'si' || $YON == 'sí') {
-            $response->say('Respondiste sí.', [
-                'language' => 'es-ES',
-                'voice'    => 'Polly.Conchita',
-                'rate'     => '1.2'
-            ]);
+            $response->say('Respondiste sí.', [ 'language' => 'es-ES',
+            'voice' => 'Polly.Lucia-Neural',
+            'rate' => '1.1']);
         } elseif ($YON == 'no') {
-            $response->say('Respondiste no. Intentémoslo de nuevo.', [
-                'language' => 'es-ES',
-                'voice'    => 'Polly.Conchita',
-                'rate'     => '1.2'
-            ]);
+            $response->say('Respondiste no. Intentémoslo de nuevo.', [ 'language' => 'es-ES',
+            'voice' => 'Polly.Lucia-Neural',
+            'rate' => '1.1']);
             $response->redirect(url('/api/ProcessCompany/AskCompany') . '?name=' . urlencode($name) . '&email=' . urlencode($email));
         } else {
-            $response->say('Por favor, responda únicamente con sí o no.', [
-                'language' => 'es-ES',
-                'voice'    => 'Polly.Conchita',
-                'rate'     => '1.2'
-            ]);
+            $response->say('Por favor, responda únicamente con sí o no.', [ 'language' => 'es-ES',
+            'voice' => 'Polly.Lucia-Neural',
+            'rate' => '1.1']);
             $response->redirect(url('/api/ProcessCompany/AskCompany') . '?name=' . urlencode($name) . '&email=' . urlencode($email));
         }
 

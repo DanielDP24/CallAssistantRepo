@@ -45,11 +45,9 @@ class EmailController extends Controller
             'actionOnEmptyResult' => true
         ]);
     
-        $gather->say("El email facilitado es, " . $processedEmail . ", ¿Es correcto?, pulse uno si es correcto o dos si no lo es", [
-            'language' => 'es-ES',
-            'voice'    => 'Polly.Conchita',
-            'rate'     => '1.3'
-        ]);
+        $gather->say("El email facilitado es, " . $processedEmail . ", ¿Es correcto?, pulse uno si es correcto o dos si no lo es", [ 'language' => 'es-ES',
+        'voice' => 'Polly.Lucia-Neural',
+        'rate' => '1.1']);
     
         return response($response)->header('Content-Type', 'text/xml');
     }
@@ -79,11 +77,9 @@ class EmailController extends Controller
         // Se elimina la segunda condición redundante
         if (empty($YON)) {
             Log::info('El usuario no respondió al si o no del email. Repetimos la pregunta.');
-            $response->say('No le hemos escuchado.', [
-                'language' => 'es-ES',
-                'voice'    => 'Polly.Conchita',
-                'rate'     => '1.2'
-            ]);
+            $response->say('No le hemos escuchado.', [ 'language' => 'es-ES',
+            'voice' => 'Polly.Lucia-Neural',
+            'rate' => '1.1']);
             $response->redirect(url('/api/ProcessEmail') . '?name=' . urlencode($name) . '&email=' . urlencode($email));
             return response($response)->header('Content-Type', 'text/xml');
         }
@@ -91,25 +87,19 @@ class EmailController extends Controller
         Log::info('Datos recibidos en processName:', ['YON' => $YON]);
     
         if ($YON == 'si' || $YON == 'sí') {
-            $response->say('Respondiste sí.', [
-                'language' => 'es-ES',
-                'voice'    => 'Polly.Conchita',
-                'rate'     => '1.2'
-            ]);
+            $response->say('Respondiste sí.', [ 'language' => 'es-ES',
+            'voice' => 'Polly.Lucia-Neural',
+            'rate' => '1.1']);
             return $this->AskCompany($request);
         } elseif ($YON == 'no') {
-            $response->say('Respondiste no. Intentémoslo de nuevo.', [
-                'language' => 'es-ES',
-                'voice'    => 'Polly.Conchita',
-                'rate'     => '1.2'
-            ]);
+            $response->say('Respondiste no. Intentémoslo de nuevo.', [ 'language' => 'es-ES',
+            'voice' => 'Polly.Lucia-Neural',
+            'rate' => '1.1']);
             $response->redirect(url('/api/ProcessEmail/AskEmail') . '?name=' . urlencode($name));
         } else {
-            $response->say('Por favor, responda únicamente con sí o no.', [
-                'language' => 'es-ES',
-                'voice'    => 'Polly.Conchita',
-                'rate'     => '1.2'
-            ]);
+            $response->say('Por favor, responda únicamente con sí o no.', [ 'language' => 'es-ES',
+            'voice' => 'Polly.Lucia-Neural',
+            'rate' => '1.1']);
             $response->redirect(url('/api/ProcessEmail') . '?name=' . urlencode($name) . '&email=' . urlencode($email));
         }
     
@@ -131,11 +121,9 @@ class EmailController extends Controller
             'speechTimeout' => 'auto',
             'actionOnEmptyResult' => true
         ]);
-        $gather->say('Ahora ' . $name . ' por favor facilítenos el nombre de su empresa', [
-            'language' => 'es-ES',
-            'voice' => 'Polly.Conchita',
-            'rate' => '1.2'
-        ]);
+        $gather->say('Ahora ' . $name . ' por favor facilítenos el nombre de su empresa',[ 'language' => 'es-ES',
+        'voice' => 'Polly.Lucia-Neural',
+        'rate' => '1.1']);
         return $response;
     }
     public function checkEmailAi($email)
@@ -177,7 +165,7 @@ class EmailController extends Controller
     {
         Log::info('YON recibido:' . $YON);
         if (empty($YON)) {
-            return "Email vacio";
+            return "";
         }
 
         $prompt = <<<EOT
