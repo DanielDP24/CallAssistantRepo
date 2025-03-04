@@ -28,16 +28,17 @@ class NameController extends Controller
         }
 
         $gather = $response->gather([
-            'input' => 'speech',
+            'input' => 'dtmf speech',
             'timeout' => '8',
             'action' => url('/api/ProcessName/CheckNameYON') . '?name=' . urlencode($name),
             'method' => 'POST',
             'language' => 'es-ES',
             'speechModel' => 'googlev2_short',
-            'speechTimeout' => 'auto',
+            'speechTimeout' => '2',
             'actionOnEmptyResult' => true
         ]);
-        $gather->say('El nombre recibido es ' . $name . ', ¿Es correcto?, responda; si, o ,no.', ['language' => 'es-ES']);
+        $gather->say('El nombre recibido es ' . $name . ', ¿Es correcto?, pulse uno si es correcto o dos si no lo es', ['language' => 'es-ES','voice'    => 'Polly.Conchita',
+                'rate'     => '1.3']);
 
         return response($response->__toString(), 200)->header('Content-Type', 'text/xml');
     }
@@ -48,6 +49,16 @@ class NameController extends Controller
         $emailController = new EmailController();
 
         $YON = strtolower($request->input('SpeechResult'));
+
+        $digits = $request->input('Digits'); // Respuesta por teclado
+
+        // Si el usuario usó el teclado, convertir 1 en "sí" y 2 en "no"
+        if ($digits == "1") {
+            $YON = "sí";
+        } elseif ($digits == "2") {
+            $YON = "no";
+        }
+        
         $YON =  $emailController->checkAnswerYONAI($YON);
 
         Log::info('Datos recibidos en processName:', ['YON' => $YON]);

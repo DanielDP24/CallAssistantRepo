@@ -7,14 +7,15 @@ use Illuminate\Support\Facades\Log;
 use Twilio\TwiML\VoiceResponse;
 
 class CompanyController extends Controller
-{public function processCompany(Request $request)
+{
+    public function processCompany(Request $request)
     {
         $response = new VoiceResponse();
         $company  = $request->input('SpeechResult');
         Log::info('El usuario company.', ['company' => $company]);
         $name  = $request->query('name', '');
         $email = $request->query('email', '');
-           
+
         if (empty($company)) {
             Log::info('El usuario no respondió a company. Repetimos la pregunta.');
             $response->say('No le hemos escuchado.', [
@@ -25,7 +26,7 @@ class CompanyController extends Controller
             $response->redirect(url('/api/ProcessCompany/AskCompany') . '?name=' . urlencode($name) . '&email=' . urlencode($email));
             return response($response)->header('Content-Type', 'text/xml');
         }
-    
+
         $processedCompany = preg_replace(
             [
                 '/ punto /i',
@@ -44,18 +45,31 @@ class CompanyController extends Controller
                 '/ en zona /i',
                 '/ airzoné /i',
                 '/ airsoft /i',
-                
+
             ],
             [
-                '.', 'Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone',
-                'Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone', 'Airzone',
-                'Airzone', 'Airzone', 'Airzone', 'Airzone'
+                '.',
+                'Airzone',
+                'Airzone',
+                'Airzone',
+                'Airzone',
+                'Airzone',
+                'Airzone',
+                'Airzone',
+                'Airzone',
+                'Airzone',
+                'Airzone',
+                'Airzone',
+                'Airzone',
+                'Airzone',
+                'Airzone',
+                'Airzone'
             ],
             $company
         );
-    
+
         Log::info('Datos recibidos en processCompany:', ['company' => $processedCompany]);
-    
+
         $gather = $response->gather([
             'input'         => 'speech',
             'timeout'       => 10,
@@ -63,7 +77,7 @@ class CompanyController extends Controller
             'method'        => 'POST',
             'language'      => 'es-ES',
             'speechModel'   => 'googlev2_short',
-            'speechTimeout' => 2
+            'speechTimeout' => '2',
         ]);
         $gather->say(
             'Gracias por facilitarnos el nombre de su empresa, ' . $processedCompany,
@@ -73,10 +87,10 @@ class CompanyController extends Controller
                 'rate'     => '1.2'
             ]
         );
-    
+
         return response($response->__toString(), 200)->header('Content-Type', 'text/xml');
     }
-    
+
     public function CheckCompanyYON(Request $request)
     {
         $response = new VoiceResponse();
@@ -88,7 +102,7 @@ class CompanyController extends Controller
         Log::info('Datos recibidos en CheckCompanyYON:', ['YON' => $YON]);
         $name  = $request->query('name', '');
         $email = $request->query('email', '');
-    
+
         if (empty($YON)) {
             Log::info('El usuario no respondió al sí o no. Repetimos la pregunta.');
             $response->say('No escuché su respuesta. Intentémoslo de nuevo.', [
@@ -97,7 +111,7 @@ class CompanyController extends Controller
             $response->redirect(url('/api/ProcessCompany/AskCompany') . '?name=' . urlencode($name) . '&email=' . urlencode($email));
             return response($response)->header('Content-Type', 'text/xml');
         }
-    
+
         if ($YON == 'si' || $YON == 'sí') {
             $response->say('Respondiste sí.', [
                 'language' => 'es-ES',
@@ -119,8 +133,7 @@ class CompanyController extends Controller
             ]);
             $response->redirect(url('/api/ProcessCompany/AskCompany') . '?name=' . urlencode($name) . '&email=' . urlencode($email));
         }
-    
+
         return response($response->__toString(), 200)->header('Content-Type', 'text/xml');
     }
-    
 }

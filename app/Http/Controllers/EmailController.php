@@ -33,21 +33,22 @@ class EmailController extends Controller
         Log::info('Email procesado por ai:', ['email' => $processedEmail]);
     
         $gather = $response->gather([
-            'input'               => 'speech',
+            'input'               => 'dtmf speech',
             'timeout'             => 5,
             'action'              => url('/api/ProcessEmail/CheckEmailYON') . '?name=' . urlencode($name) . '&email=' . urlencode($processedEmail),
             'method'              => 'POST',
             'language'            => 'es-ES',
             'speechModel'         => 'googlev2_short',
             'bargeIn'             => true,
-            'speechTimeout'       => 2,
+            'speechTimeout' => '2',
             'hints'               => 'Inditex, Mercadona, Telefónica, Iberdrola, BBVA, Repsol, Mapfre, Acciona, Endesa, Naturgy, Ferrovial, Aena, Mango, Zara, SEAT, Ford España, Volkswagen España, Samsung España',
             'actionOnEmptyResult' => true
         ]);
     
-        $gather->say("El email facilitado es, " . $processedEmail . ". Ahora diga sí o no si es o no correcto", [
+        $gather->say("El email facilitado es, " . $processedEmail . ", ¿Es correcto?, pulse uno si es correcto o dos si no lo es", [
             'language' => 'es-ES',
-            'voice'    => 'Polly.Conchita'
+            'voice'    => 'Polly.Conchita',
+            'rate'     => '1.3'
         ]);
     
         return response($response)->header('Content-Type', 'text/xml');
@@ -58,6 +59,16 @@ class EmailController extends Controller
         $YON = strtolower($request->input('SpeechResult'));
         Log::info('El usuario YON', ['YON EMAIL' => $YON]);
         //COMPROBAMOS SI RESPUESTA NEGATIVA O POSITIVA
+
+        $digits = $request->input('Digits'); // Respuesta por teclado
+
+        // Si el usuario usó el teclado, convertir 1 en "sí" y 2 en "no"
+        if ($digits == "1") {
+            $YON = "sí";
+        } elseif ($digits == "2") {
+            $YON = "no";
+        }
+
         $YON = $this->checkAnswerYONAi($YON);
 
         $name = $request->query('name', '');
@@ -147,7 +158,7 @@ class EmailController extends Controller
         
         Example: "my email is Jose Maria all joined arroba Airzone Control punto com" so you will return josemaria@airzonecontrol.com
         
-        If provided is "airsoft" swap it for airzonecontrol 
+        If provided is "airsoft"m, or something that contains control behind the @, please swap it for airzonecontrol 
 
         You just return the email, nothing else.
         
@@ -172,12 +183,14 @@ class EmailController extends Controller
         $prompt = <<<EOT
         You are a professional conversational assistant. 
         Your task is to listen to and analyze user responses that may include phrases such as 
-        "yes", "no", "that's fine", "it's correct", "that's wrong", "I want to repeat", or "isn't it so".
+        "si", "no", "está bien", "es correcto", "está mal", "quiero repetir", or "no es así".
          Using your advanced natural language understanding and contextual analysis, deduce whether the 
          response is positive (affirmative) or negative. If the response is positive, simply output "si". 
          If it is negative or non-affirmative, output "no" any other case just answer no. 
          No other possibility than the answers "si" or "no". Ensure your decision is based on all the 
          nuances present in the user's input."$YON" 
+
+         Remember, 1 is yes, and 2 is no
         EOT;
 
         $response = Prism::text()
