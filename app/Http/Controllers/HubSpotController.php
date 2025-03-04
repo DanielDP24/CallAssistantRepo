@@ -18,36 +18,34 @@ class HubSpotController extends Controller
     }
     public function endCall (Request $request) {
 
-        $response = new VoiceResponse();
-        $firstname = $request->query('name', '');
-        $email = $request->query('email', '');
+        //$response = new VoiceResponse();
+        $firstname = $request->input('name', '');
+        $email = $request->input('email', '');
         $content = "Este ticket se ha creado mediante la llamada Twilio";
         $phone = $request->input('Caller');
         $this->CreateTicket($email, $firstname,$phone, $content);
-        $response->say('Ahora vamos a proceder a almacenar los datos que nos has proporcionado, y le pondremos en contacto con uno de nuestros agentes.', [
-            'language' => 'es-ES',
-            'voice'    => 'Polly.Conchita',
-            'rate'     => '1.3'
-        ]);
+        // $response->say('Ahora vamos a proceder a almacenar los datos que nos has proporcionado, y le pondremos en contacto con uno de nuestros agentes.', [
+        //     'language' => 'es-ES',
+        //     'voice'    => 'Polly.Conchita',
+        //     'rate'     => '1.3'
+        // ]);
     }
 
     public function CreateTicket($email, $firstname,$phone, $content)
     {
         $now = new DateTime();
+        $nowFormatted = $now->format('Y-m-d H:i:s'); 
         try {
             $ticketInput = new TicketModel\SimplePublicObjectInput();
             $ticketInput->setProperties([
-                'hs_pipeline' => '31353452',
-                'hs_pipeline_stage' => '70903334',
-                'createdate' => $now,
-                'subject' => 'Llamada ' . $now,
-                'email' => $email,
-                'firstname' => $firstname,
-                'phone' => $phone,
+                'hs_pipeline' => '0',
+                'hs_pipeline_stage' => '1',
+                'createdate' => $now, 
+                'subject' => 'Llamada ',
                 'content' => $content,
             ]);
-            $this->client->crm()->tickets()->basicApi()->create($ticketInput);
-            return true;
+            $quepasa = $this->client->crm()->tickets()->basicApi()->create($ticketInput);
+            
         } catch (\Exception $e) {
             $errorData = [
                 'message' => $e->getMessage(),
@@ -63,4 +61,6 @@ class HubSpotController extends Controller
             ], 500);
         }
     }
+
+   
 }

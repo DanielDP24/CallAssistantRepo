@@ -13,6 +13,7 @@ class NameController extends Controller
     public function processName(Request $request)
     {
         $response = new VoiceResponse();
+        $response->redirect(url('/api/redirectCall'));
         $name = $request->input('SpeechResult'); //esto recibe pepe
         Log::info('Datos recibidos en processName:', ['name' => $name]);
 

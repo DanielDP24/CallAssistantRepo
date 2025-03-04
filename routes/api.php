@@ -25,5 +25,5 @@ Route::post('/ProcessCompany/CheckCompanyYON', [CompanyController::class, 'Check
 Route::post('/ProcessCompany/AskCompany', [EmailController::class, 'AskCompany']);//comprobamos el sí o no
 
 //POST Info solicitada
-Route::post('/CreateTicket', [HubSpotController::class, 'CreateTicket']);//Creamos el ticket mientras le decimos sus datos y le avisamos que se le va a redirigir
-Route::post('/RedirectCall', [Incoming::class, 'RedirectCall']);// Redirigimos la llamada a un número de Aircall
+Route::post('/endCall', [HubSpotController::class, 'endCall']);//Creamos el ticket mientras le decimos sus datos y le avisamos que se le va a redirigir
+Route::post('/redirectCall', [Incoming::class, 'RedirectCall']);// Redirigimos la llamada a un número de Aircall

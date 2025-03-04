@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Twilio\TwiML\VoiceResponse;
 
 class Incoming extends Controller
@@ -33,7 +35,22 @@ class Incoming extends Controller
         return $response;
     }
 
-    public function RedirectCall(){
-
+    public function RedirectCall(Request $request)
+    {
+        $response = new VoiceResponse();
+    
+        Log::info('Redirigiendo la llamada de ' . $request->input('Caller') . ' a +34615581444');
+    
+        $response->say('Estamos transfiriendo su llamada...', [
+            'language' => 'es-ES',
+            'voice' => 'Polly.Mia'
+        ]);
+    
+        // Transferimos la llamada en curso al número de destino
+        $dial = $response->dial('answerOnBridge="true"');
+        $dial->number('+34951125359');
+    
+        return response($response)->header('Content-Type', 'text/xml');
     }
+    
 }
