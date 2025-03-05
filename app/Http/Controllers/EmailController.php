@@ -33,7 +33,7 @@ class EmailController extends Controller
         Log::info('Email procesado por ai:', ['email' => $processedEmail]);
     
         $gather = $response->gather([
-            'input'               => 'dtmf speech',
+            'input'               => 'speech',
             'timeout'             => 5,
             'action'              => url('/api/ProcessEmail/CheckEmailYON') . '?name=' . urlencode($name) . '&email=' . urlencode($processedEmail),
             'method'              => 'POST',
@@ -45,27 +45,18 @@ class EmailController extends Controller
             'actionOnEmptyResult' => true
         ]);
     
-        $gather->say("El email facilitado es, " . $processedEmail . ", ¿Es correcto?, pulse uno si es correcto o dos si no lo es", [ 'language' => 'es-ES',
+        $gather->say("El email facilitado es, " . $processedEmail . ",  confirme si es o no correcto", [ 'language' => 'es-ES',
         'voice' => 'Polly.Lucia-Neural',
         'rate' => '1.1']);
     
         return response($response)->header('Content-Type', 'text/xml');
     }
     
-    public function CheckEmailYON(Request $request)
+    public function CheckEmailYON(Request $request, $contador)
     {
+        $contador = $contador + 1;
         $YON = strtolower($request->input('SpeechResult'));
         Log::info('El usuario YON', ['YON EMAIL' => $YON]);
-        //COMPROBAMOS SI RESPUESTA NEGATIVA O POSITIVA
-
-        $digits = $request->input('Digits'); // Respuesta por teclado
-
-        // Si el usuario usó el teclado, convertir 1 en "sí" y 2 en "no"
-        if ($digits == "1") {
-            $YON = "sí";
-        } elseif ($digits == "2") {
-            $YON = "no";
-        }
 
         $YON = $this->checkAnswerYONAi($YON);
 
@@ -118,7 +109,7 @@ class EmailController extends Controller
             'method' => 'POST',
             'language' => 'es-ES',
             'speechModel' => 'googlev2_short',
-            'speechTimeout' => 'auto',
+            'speechTimeout' => '1',
             'actionOnEmptyResult' => true
         ]);
         $gather->say('Ahora ' . $name . ' por favor facilítenos el nombre de su empresa',[ 'language' => 'es-ES',
@@ -149,6 +140,8 @@ class EmailController extends Controller
         If provided is "airsoft"m, or something that contains control behind the @, please swap it for airzonecontrol 
 
         You just return the email, nothing else.
+
+        If no email address provided, return, "Esto no es un email válido"
         
         The email provided is: "$email" 
         EOT;

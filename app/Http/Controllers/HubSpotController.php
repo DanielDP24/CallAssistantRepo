@@ -6,6 +6,7 @@ use DateTime;
 use HubSpot\Factory;
 use Illuminate\Http\Request;
 use \HubSpot\Client\Crm\Tickets\Model as TicketModel;
+use Illuminate\Support\Facades\Log;
 use Twilio\TwiML\VoiceResponse;
 
 class HubSpotController extends Controller
@@ -16,36 +17,37 @@ class HubSpotController extends Controller
     {
         $this->client = Factory::createWithAccessToken(config('services.hubspot.apikey'));
     }
-    public function endCall (Request $request) {
-
-        //$response = new VoiceResponse();
+    public function endCall(Request $request)
+    {
+        $response = new VoiceResponse();
         $firstname = $request->input('name', '');
         $email = $request->input('email', '');
-        $content = "Este ticket se ha creado mediante la llamada Twilio";
-        $phone = $request->input('Caller');
-        $this->CreateTicket($email, $firstname,$phone, $content);
-        // $response->say('Ahora vamos a proceder a almacenar los datos que nos has proporcionado, y le pondremos en contacto con uno de nuestros agentes.', [
-        //     'language' => 'es-ES',
-        //     'voice'    => 'Polly.Conchita',
-        //     'rate'     => '1.3'
-        // ]);
+        $company = $request->input('company');
+        $caller = $request->input('Caller');
+
+        $this->CreateTicket($email, $firstname, $caller, $company);
+
+        $response->say('Ahora procederemos a almacenar los datos proporcionados, y le pondremos en contacto con uno de nuestros agentes.', [ 'language' => 'es-ES',
+        'voice' => 'Polly.Lucia-Neural',
+        'rate' => '1.1']);
+        $response->redirect(url('/api/redirectCall')); 
+        
+        return $response;
     }
 
-    public function CreateTicket($email, $firstname,$phone, $content)
+    public function CreateTicket($email, $firstname, $caller, $company)
     {
         $now = new DateTime();
-        $nowFormatted = $now->format('Y-m-d H:i:s'); 
         try {
             $ticketInput = new TicketModel\SimplePublicObjectInput();
             $ticketInput->setProperties([
                 'hs_pipeline' => '0',
                 'hs_pipeline_stage' => '1',
-                'createdate' => $now, 
-                'subject' => 'Llamada ',
-                'content' => $content,
+                'createdate' => $now,
+                'subject' => 'Llamada de Twilio',
+                'content' => 'Empresa: ' . $company . ', Nombre llamador: ' . $firstname . ' , Email llamador: ' . $email . ' , Teléfono del llamador: ' . $caller,
             ]);
             $quepasa = $this->client->crm()->tickets()->basicApi()->create($ticketInput);
-            
         } catch (\Exception $e) {
             $errorData = [
                 'message' => $e->getMessage(),
@@ -62,5 +64,23 @@ class HubSpotController extends Controller
         }
     }
 
-   
+    public function RedirectCall(Request $request)
+    {
+        $response = new VoiceResponse();
+
+        $caller = $request->input('Caller');
+        Log::info('Redirigiendo la llamada de ' . $caller . ' a +34 951 12 53 59');
+
+        $response->say('Estamos transfiriendo su llamada...', [
+            'language' => 'es-ES',
+            'voice' => 'Polly.Lucia-Neural',
+            'rate' => '1.1'
+        ]);
+
+        // Transferimos la llamada en curso al número de destino
+        $dial = $response->dial('answerOnBridge="true"');
+        $dial->number('+34951125359');
+
+        return response($response)->header('Content-Type', 'text/xml');
+    }
 }

@@ -13,44 +13,59 @@ class NameController extends Controller
     public function processName(Request $request)
     {
         $response = new VoiceResponse();
-                     // $response->redirect(url('/api/redirectCall')); ESTO ES PARA REDIRIGIR  LA LLAMADA
         $name = $request->input('SpeechResult'); //esto recibe pepe
-        Log::info('Datos recibidos en processName:', ['name' => $name]);
+        $contador = (int) $request->query('contador', 0);
 
-        if ($name == '' || $name  == null) {
-            $name = $request->query('name', '');
-            Log::info('Datos recibidos en segunda vez:', ['name' => $name]);
+
+        while ($contador < 3) {
+            $contador = $contador + 1;
+            Log::info('Datos recibidos en processName:', ['name' => $name, 'contador' => $contador]);
+
+            if ($name == '' || $name  == null) {
+                $name = $request->query('name', '');
+                Log::info('Datos recibidos en segunda vez:', ['name' => $name]);
+            }
+            if (empty($name)) {
+                Log::info('El usuario no respondió. Repetimos la pregunta.');
+                $response->say('No escuché su nombre. Intentémoslo de nuevo.', [
+                    'language' => 'es-ES',
+                    'voice' => 'Polly.Lucia-Neural',
+                    'rate' => '1.1'
+                ]);
+                $response->redirect(url('/api/ManageCall') . '?_method=GET');
+                return response($response)->header('Content-Type', 'text/xml');
+            }
+
+            $gather = $response->gather([
+                'input' => 'dtmf speech',
+                'timeout' => '8',
+                'action' => url('/api/ProcessName/CheckNameYON') . '?name=' . urlencode($name) . '&contador=' . urlencode($contador),
+                'method' => 'POST',
+                'language' => 'es-ES',
+                'speechModel' => 'googlev2_short',
+                'speechTimeout' => '2',
+                'actionOnEmptyResult' => true
+            ]);
+            $gather->say('El nombre recibido es' . $name . ' confirme si es o no correcto', [
+                'language' => 'es-ES',
+                'voice' => 'Polly.Lucia-Neural',
+                'rate' => '1.1'
+            ]);
+
+            return response($response->__toString(), 200)->header('Content-Type', 'text/xml');
         }
-        if (empty($name)) {
-            Log::info('El usuario no respondió. Repetimos la pregunta.');
-            $response->say('No escuché su nombre. Intentémoslo de nuevo.', [ 'language' => 'es-ES',
-            'voice' => 'Polly.Lucia-Neural',
-            'rate' => '1.1']);
-            $response->redirect(url('/api/ManageCall') . '?_method=GET');
-            return response($response)->header('Content-Type', 'text/xml');
-        }
-
-        $gather = $response->gather([
-            'input' => 'dtmf speech',
-            'timeout' => '8',
-            'action' => url('/api/ProcessName/CheckNameYON') . '?name=' . urlencode($name),
-            'method' => 'POST',
-            'language' => 'es-ES',
-            'speechModel' => 'googlev2_short',
-            'speechTimeout' => '2',
-            'actionOnEmptyResult' => true
-        ]);
-        $gather->say('El nombre recibido es' . $name . ' confirme si es o no correcto', [ 'language' => 'es-ES',
-        'voice' => 'Polly.Lucia-Neural',
-        'rate' => '1.1']);
-
-        return response($response->__toString(), 200)->header('Content-Type', 'text/xml');
+        Log::info('Datos recibidos en processName:', ['name' => $name, 'contador' => $contador]);
+        return $this->AskEmail($request);
     }
 
     public function CheckNameYON(Request $request)
     {
         $response = new VoiceResponse();
         $emailController = new EmailController();
+
+
+        $contador = (int) $request->query('contador', 0);
+
 
         $YON = strtolower($request->input('SpeechResult'));
 
@@ -62,7 +77,7 @@ class NameController extends Controller
         } elseif ($digits == "2") {
             $YON = "no";
         }
-        
+
         $YON =  $emailController->checkAnswerYONAI($YON);
 
         Log::info('Datos recibidos en processName:', ['YON' => $YON]);
@@ -70,29 +85,37 @@ class NameController extends Controller
 
         if (empty($YON)) {
             Log::info('El usuario no respondió al si o no. Repetimos la pregunta.');
-            $response->say('No escuché su respuesta. Intentémoslo de nuevo.', [ 'language' => 'es-ES',
-            'voice' => 'Polly.Lucia-Neural',
-            'rate' => '1.1']);
-            $response->redirect(url('/api/ProcessName') . '?name=' . urlencode($name));
+            $response->say('No escuché su respuesta. Intentémoslo de nuevo.', [
+                'language' => 'es-ES',
+                'voice' => 'Polly.Lucia-Neural',
+                'rate' => '1.1'
+            ]);
+            $response->redirect(url('/api/ProcessName') . '?name=' . urlencode($name) . '&contador=' . urlencode($contador));
             return response($response)->header('Content-Type', 'text/xml');
         }
 
         if ($YON == 'si' || $YON == 'sí') {
-            $response->say('Respondiste sí.', [ 'language' => 'es-ES',
-            'voice' => 'Polly.Lucia-Neural',
-            'rate' => '1.1']);
+            $response->say('Respondiste sí.', [
+                'language' => 'es-ES',
+                'voice' => 'Polly.Lucia-Neural',
+                'rate' => '1.1'
+            ]);
             return $this->AskEmail($request);
         } elseif ($YON == 'no') {
-            $response->say('Respondiste no. Intentémoslo de nuevo.', [ 'language' => 'es-ES',
-            'voice' => 'Polly.Lucia-Neural',
-            'rate' => '1.1']);
-            $response->redirect(url('/api/ManageCall') . '?_method=GET'); // Volver a preguntar el nombre
+            $response->say('Respondiste no. Intentémoslo de nuevo.', [
+                'language' => 'es-ES',
+                'voice' => 'Polly.Lucia-Neural',
+                'rate' => '1.1'
+            ]);
+            $response->redirect(url('/api/ManageCall') . '?_method=GET' . '&contador=' . urlencode($contador)); // Volver a preguntar el nombre
         } else {
-            $response->say('Por favor, solo indique si es correcto o no es correcto.', [ 'language' => 'es-ES',
-            'voice' => 'Polly.Lucia-Neural',
-            'rate' => '1.1']);
+            $response->say('Por favor, solo indique si es correcto o no es correcto.', [
+                'language' => 'es-ES',
+                'voice' => 'Polly.Lucia-Neural',
+                'rate' => '1.1'
+            ]);
 
-            $response->redirect(url('/api/ProcessName') . '?name=' . urlencode($name));
+            $response->redirect(url('/api/ProcessName') . '?name=' . urlencode($name) . '&contador=' . urlencode($contador));
         }
 
         return response($response->__toString(), 200)->header('Content-Type', 'text/xml');
@@ -109,15 +132,15 @@ class NameController extends Controller
             'method' => 'POST',
             'language' => 'es-ES',
             'speechModel' => 'googlev2_short',
-            'speechTimeout' => 'auto',
+            'speechTimeout' => '1',
             'actionOnEmptyResult' => true
         ]);
-        $gather->say('Ahora ' . $name . ' por favor facilítenos su email', [ 'language' => 'es-ES',
-        'voice' => 'Polly.Lucia-Neural',
-        'rate' => '1.1']);
+        $gather->say('Ahora ' . $name . ' por favor facilítenos su email', [
+            'language' => 'es-ES',
+            'voice' => 'Polly.Lucia-Neural',
+            'rate' => '1.1'
+        ]);
 
         return $response;
     }
-
-    
 }

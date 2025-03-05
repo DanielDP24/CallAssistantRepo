@@ -18,7 +18,6 @@ Route::post('/ProcessEmail', [EmailController::class, 'processEmail']); //Pregun
 Route::post('/ProcessEmail/CheckEmailYON', [EmailController::class, 'CheckEmailYON']);//comprobamos el sí o no
 Route::post('/ProcessEmail/AskEmail', [NameController::class, 'AskEmail']);//comprobamos el sí o no
 
-
 //Preguntamos por la empresa
 Route::post('/ProcessCompany', [CompanyController::class, 'processCompany']); //preguntamos si o no.
 Route::post('/ProcessCompany/CheckCompanyYON', [CompanyController::class, 'CheckCompanyYON']); //Comprobamos el sí o no
@@ -26,4 +25,4 @@ Route::post('/ProcessCompany/AskCompany', [EmailController::class, 'AskCompany']
 
 //POST Info solicitada
 Route::post('/endCall', [HubSpotController::class, 'endCall']);//Creamos el ticket mientras le decimos sus datos y le avisamos que se le va a redirigir
-Route::post('/redirectCall', [Incoming::class, 'RedirectCall']);// Redirigimos la llamada a un número de Aircall
+Route::post('/redirectCall', [HubSpotController::class, 'RedirectCall']);// Redirigimos la llamada a un número de Aircall
