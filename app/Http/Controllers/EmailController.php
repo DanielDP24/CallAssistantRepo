@@ -12,91 +12,116 @@ class EmailController extends Controller
 {
     public function processEmail(Request $request)
     {
+
         $response = new VoiceResponse();
         $email = $request->input('SpeechResult');
         $name = $request->query('name', '');
         $email2 = $request->query('email', '');
-    
-        if (!empty($email2)) {
-            $email = $email2;
-        }
-        if (empty($email)) {
-            Log::info('El usuario no respondió al email. Repetimos la pregunta.');
-            $response->redirect(url('/api/ProcessEmail/AskEmail') . '?name=' . urlencode($name));
+        $contadorEmail = (int) $request->query('contadorEmail', 0);
+
+        while ($contadorEmail < 3) {
+
+            if (!empty($email2)) {
+                $email = $email2;
+            }
+            if (empty($email)) {
+                $contadorEmail = $contadorEmail + 1;
+                Log::info('El usuario no respondió al email. Repetimos la pregunta.');
+                $response->redirect(url('/api/ProcessEmail/AskEmail') . '?name=' . urlencode($name) . '&contadorEmail=' . urlencode($contadorEmail));
+                return response($response)->header('Content-Type', 'text/xml');
+            }
+
+            Log::info('Email recibido:', ['rawEmail' => $email]);
+
+            $processedEmail = $this->checkEmailAi($email);
+
+            Log::info('Email procesado por ai:', ['email' => $processedEmail]);
+
+            $gather = $response->gather([
+                'input'               => 'speech',
+                'timeout'             => 5,
+                'action'              => url('/api/ProcessEmail/CheckEmailYON') . '?name=' . urlencode($name) . '&email=' . urlencode($processedEmail)  . '&contadorEmail=' . urlencode($contadorEmail),
+                'method'              => 'POST',
+                'language'            => 'es-ES',
+                'speechModel'         => 'googlev2_short',
+                'bargeIn'             => true,
+                'speechTimeout' => '2',
+                'hints'               => 'Inditex, Mercadona, Telefónica, Iberdrola, BBVA, Repsol, Mapfre, Acciona, Endesa, Naturgy, Ferrovial, Aena, Mango, Zara, SEAT, Ford España, Volkswagen España, Samsung España',
+                'actionOnEmptyResult' => true
+            ]);
+
+            $gather->say("El email facilitado es, " . $processedEmail . ",  confirme si es o no correcto", [
+                'language' => 'es-ES',
+                'voice' => 'Polly.Lucia-Neural',
+                'rate' => '1.1'
+            ]);
+
             return response($response)->header('Content-Type', 'text/xml');
         }
-    
-        Log::info('Email recibido:', ['rawEmail' => $email]);
-    
-        $processedEmail = $this->checkEmailAi($email);
-    
-        Log::info('Email procesado por ai:', ['email' => $processedEmail]);
-    
-        $gather = $response->gather([
-            'input'               => 'speech',
-            'timeout'             => 5,
-            'action'              => url('/api/ProcessEmail/CheckEmailYON') . '?name=' . urlencode($name) . '&email=' . urlencode($processedEmail),
-            'method'              => 'POST',
-            'language'            => 'es-ES',
-            'speechModel'         => 'googlev2_short',
-            'bargeIn'             => true,
-            'speechTimeout' => '2',
-            'hints'               => 'Inditex, Mercadona, Telefónica, Iberdrola, BBVA, Repsol, Mapfre, Acciona, Endesa, Naturgy, Ferrovial, Aena, Mango, Zara, SEAT, Ford España, Volkswagen España, Samsung España',
-            'actionOnEmptyResult' => true
+        Log::info('Datos recibidos en emailcontroller:', ['name' => $name, 'contadorEmail' => $contadorEmail, 'email' => $email]);
+        $response->say('Pasemos a la siguiente pregunta', [
+            'language' => 'es-ES',
+            'voice' => 'Polly.Lucia-Neural',
+            'rate' => '1.1'
         ]);
-    
-        $gather->say("El email facilitado es, " . $processedEmail . ",  confirme si es o no correcto", [ 'language' => 'es-ES',
-        'voice' => 'Polly.Lucia-Neural',
-        'rate' => '1.1']);
-    
-        return response($response)->header('Content-Type', 'text/xml');
+        return $this->AskCompany($request);
     }
-    
-    public function CheckEmailYON(Request $request, $contador)
+
+    public function CheckEmailYON(Request $request)
     {
-        $contador = $contador + 1;
+        $contadorEmail = (int) $request->query('contadorEmail', 0);
+
+        $contadorEmail = $contadorEmail + 1;
         $YON = strtolower($request->input('SpeechResult'));
-        Log::info('El usuario YON', ['YON EMAIL' => $YON]);
+        Log::info('El usuario YON', ['YON EMAIL' => $YON, 'contadorEmail' => $contadorEmail]);
 
         $YON = $this->checkAnswerYONAi($YON);
 
         $name = $request->query('name', '');
         $email = $request->query('email', '');
-    
+
         $response = new VoiceResponse();
-    
+
         // Se elimina la segunda condición redundante
         if (empty($YON)) {
             Log::info('El usuario no respondió al si o no del email. Repetimos la pregunta.');
-            $response->say('No le hemos escuchado.', [ 'language' => 'es-ES',
-            'voice' => 'Polly.Lucia-Neural',
-            'rate' => '1.1']);
+            $response->say('No le hemos escuchado.', [
+                'language' => 'es-ES',
+                'voice' => 'Polly.Lucia-Neural',
+                'rate' => '1.1'
+            ]);
             $response->redirect(url('/api/ProcessEmail') . '?name=' . urlencode($name) . '&email=' . urlencode($email));
             return response($response)->header('Content-Type', 'text/xml');
         }
-    
+
         Log::info('Datos recibidos en processName:', ['YON' => $YON]);
-    
+
         if ($YON == 'si' || $YON == 'sí') {
-            $response->say('Respondiste sí.', [ 'language' => 'es-ES',
-            'voice' => 'Polly.Lucia-Neural',
-            'rate' => '1.1']);
+            $response->say('Respondiste sí.', [
+                'language' => 'es-ES',
+                'voice' => 'Polly.Lucia-Neural',
+                'rate' => '1.1'
+            ]);
             return $this->AskCompany($request);
         } elseif ($YON == 'no') {
-            $response->say('Respondiste no. Intentémoslo de nuevo.', [ 'language' => 'es-ES',
-            'voice' => 'Polly.Lucia-Neural',
-            'rate' => '1.1']);
+            $response->say('Respondiste no. Intentémoslo de nuevo.', [
+                'language' => 'es-ES',
+                'voice' => 'Polly.Lucia-Neural',
+                'rate' => '1.1'
+            ]);
             $response->redirect(url('/api/ProcessEmail/AskEmail') . '?name=' . urlencode($name));
         } else {
-            $response->say('Por favor, responda únicamente con sí o no.', [ 'language' => 'es-ES',
-            'voice' => 'Polly.Lucia-Neural',
-            'rate' => '1.1']);
+            $response->say('Por favor, responda únicamente con sí o no.', [
+                'language' => 'es-ES',
+                'voice' => 'Polly.Lucia-Neural',
+                'rate' => '1.1'
+            ]);
             $response->redirect(url('/api/ProcessEmail') . '?name=' . urlencode($name) . '&email=' . urlencode($email));
         }
-    
+
         return response($response->__toString(), 200)->header('Content-Type', 'text/xml');
     }
-    
+
     public function AskCompany(Request $request)
     {
         $response = new VoiceResponse();
@@ -112,9 +137,11 @@ class EmailController extends Controller
             'speechTimeout' => '1',
             'actionOnEmptyResult' => true
         ]);
-        $gather->say('Ahora ' . $name . ' por favor facilítenos el nombre de su empresa',[ 'language' => 'es-ES',
-        'voice' => 'Polly.Lucia-Neural',
-        'rate' => '1.1']);
+        $gather->say('Ahora ' . $name . ' por favor facilítenos el nombre de su empresa', [
+            'language' => 'es-ES',
+            'voice' => 'Polly.Lucia-Neural',
+            'rate' => '1.1'
+        ]);
         return $response;
     }
     public function checkEmailAi($email)

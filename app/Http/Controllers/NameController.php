@@ -27,7 +27,8 @@ class NameController extends Controller
             }
             if (empty($name)) {
                 Log::info('El usuario no respondió. Repetimos la pregunta.');
-                $response->say('No escuché su nombre. Intentémoslo de nuevo.', [
+                
+                $response->say('No escuché su respuesta. Intentémoslo de nuevo.', [
                     'language' => 'es-ES',
                     'voice' => 'Polly.Lucia-Neural',
                     'rate' => '1.1'
@@ -125,10 +126,13 @@ class NameController extends Controller
     {
         $response = new VoiceResponse();
         $name = $request->query('name', '');
+        $contadorEmail = (int) $request->query('contadorEmail', 0);
+        Log::info('Pedir email llega :', ['$name' => $name, 'contadorEmail' => $contadorEmail]);
+
         $gather = $response->gather([
             'input' => 'speech',
             'timeout' => '10',
-            'action' => url('/api/ProcessEmail') . '?name=' . urlencode($name),
+            'action' => url('/api/ProcessEmail') . '?name=' . urlencode($name) . '&contadorEmail=' . urlencode($contadorEmail),
             'method' => 'POST',
             'language' => 'es-ES',
             'speechModel' => 'googlev2_short',

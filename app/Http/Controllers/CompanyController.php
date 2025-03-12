@@ -120,7 +120,7 @@ class CompanyController extends Controller
         $company = $request->query('company', '');
         $company2 = $request->input('company');
 
-        
+                
 
         if (empty($YON)) {//TODO:
             Log::info('El usuario no respondió al sí o no. Repetimos la pregunta.');
