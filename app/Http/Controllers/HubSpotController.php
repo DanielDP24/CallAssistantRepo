@@ -55,7 +55,7 @@ class HubSpotController extends Controller
                 'hs_pipeline_stage' => '1',
                 'createdate' => $now,
                 'subject' => 'Llamada de Twilio',
-                'content' => 'Empresa: ' . $company . ', Nombre llamador: ' . $firstname . ' , Email llamador: ' . $email . ' , Teléfono del llamador: ' . $caller,
+                'content' => 'Empresa: ' . $company . ', Nombre: ' . $firstname . ' , Email: ' . $email . ' , Teléfono: ' . $caller,
             ]);
             $quepasa = $this->client->crm()->tickets()->basicApi()->create($ticketInput);
         } catch (\Exception $e) {
