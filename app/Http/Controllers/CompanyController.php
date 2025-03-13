@@ -29,6 +29,7 @@ class CompanyController extends Controller
         $processedCompany = preg_replace(
             [
                 '/ punto /i',
+                '/ Air zone /i',
                 '/ air /i',
                 '/ nzone /i',
                 '/ erzone /i',
@@ -44,17 +45,18 @@ class CompanyController extends Controller
                 '/ en zona /i',
                 '/ airzoné /i',
                 '/ airsoft /i',
-                '/ airozone /i',         
-                '/ airezone /i',         
-                '/ airzun /i',           
-                '/ eirzone /i',          
-                '/ ersone /i',           
-                '/ arizone /i',          
-                '/ aireson /i',          
-                '/ airso(n|ne)/i',       
+                '/ airozone /i',
+                '/ airezone /i',
+                '/ airzun /i',
+                '/ eirzone /i',
+                '/ ersone /i',
+                '/ arizone /i',
+                '/ aireson /i',
+                '/ airso(n|ne)/i',
             ],
             [
                 '.',
+                'Airzone',
                 'Airzone',
                 'Airzone',
                 'Airzone',
@@ -118,28 +120,29 @@ class CompanyController extends Controller
         $name  = $request->query('name', '');
         $email = $request->query('email', '');
         $company = $request->query('company', '');
-        $company2 = $request->input('company');
+        Log::info('Datos recibidos en company YON:', ['company' => $company]);
 
-                
 
-        if (empty($YON)) {//TODO:
+        if (empty($YON)) {
             Log::info('El usuario no respondió al sí o no. Repetimos la pregunta.');
             $response->say('No escuché su respuesta. Intentémoslo de nuevo.', [
                 'language' => 'es-ES',
                 'voice' => 'Polly.Lucia-Neural',
                 'rate' => '1.1'
             ]);
-            $response->redirect(url('/api/ProcessCompany/AskCompany') . '?name=' . urlencode($name) . '&email=' . urlencode($email)) . '&company=' . urlencode($company);
+            $response->redirect(url('/api/ProcessCompany/CheckCompanyYON') . '?name=' . urlencode($name) . '&email=' . urlencode($email)) . '&company=' . urlencode($company);
             return response($response)->header('Content-Type', 'text/xml');
         }
 
-        if ($YON == 'si' || $YON == 'sí') { 
+        if ($YON == 'si' || $YON == 'sí') {
             $response->say('Respondiste sí.', [
                 'language' => 'es-ES',
                 'voice' => 'Polly.Lucia-Neural',
                 'rate' => '1.1'
             ]);
-         $response->redirect(url('/api/endCall/') . '?name=' . urlencode($name) . '&email=' . urlencode($email)) . '&company=' . urlencode($company);
+            Log::info('Company antes de entrara en la url:', ['company' => $company]);
+
+            $response->redirect(url('/api/endCall') . '?name=' . urlencode($name) . '&email=' . urlencode($email) . '&company=' . urlencode($company));
         } elseif ($YON == 'no') {
             $response->say('Respondiste no. Intentémoslo de nuevo.', [
                 'language' => 'es-ES',
@@ -153,7 +156,7 @@ class CompanyController extends Controller
                 'voice' => 'Polly.Lucia-Neural',
                 'rate' => '1.1'
             ]);
-            $response->redirect(url('/api/ProcessCompany/AskCompany') . '?name=' . urlencode($name) . '&email=' . urlencode($email));
+            $response->redirect(url('/api/ProcessCompany/CheckCompanyYON') . '?name=' . urlencode($name) . '&email=' . urlencode($email));
         }
 
         return response($response->__toString(), 200)->header('Content-Type', 'text/xml');

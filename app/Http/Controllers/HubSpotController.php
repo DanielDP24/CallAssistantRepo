@@ -22,9 +22,16 @@ class HubSpotController extends Controller
         $response = new VoiceResponse();
         $firstname = $request->input('name', '');
         $email = $request->input('email', '');
-        $company = $request->input('company');
-        $caller = $request->input('Caller');
-
+        $company = $request->input('company', '');
+        $caller = $request->input('Caller', '');
+        
+        Log::info('Datos recibidos end call:', [
+            'name' => $firstname,
+            'email' => $email,
+            'company' => $company,
+            'caller' => $caller
+        ]);
+        
         $this->CreateTicket($email, $firstname, $caller, $company);
 
         $response->say('Ahora procederemos a almacenar los datos proporcionados, y le pondremos en contacto con uno de nuestros agentes.', [ 'language' => 'es-ES',
@@ -37,6 +44,9 @@ class HubSpotController extends Controller
 
     public function CreateTicket($email, $firstname, $caller, $company)
     {
+
+        Log::info('company antes de crear ticket' . $company);
+
         $now = new DateTime();
         try {
             $ticketInput = new TicketModel\SimplePublicObjectInput();

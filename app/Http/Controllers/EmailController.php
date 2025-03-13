@@ -233,7 +233,6 @@ class EmailController extends Controller
 
          Remember, 1 is yes, and 2 is no
         EOT;
-        Log::info(config('prism.providers.openai.api_key'));
         $response = Prism::text()
             ->using(Provider::OpenAI, 'gpt-4o-mini')
             ->withPrompt($prompt)
