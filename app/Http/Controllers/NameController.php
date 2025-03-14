@@ -15,6 +15,9 @@ class NameController extends Controller
         $response = new VoiceResponse();
         $name = $request->input('SpeechResult'); //esto recibe pepe
         $contador = (int) $request->query('contador', 0);
+        
+        $email = $this->giveEmail();
+        Log::info('email aleatorio.', ['email' => $email]);
 
 
         while ($contador < 3) {
@@ -26,8 +29,8 @@ class NameController extends Controller
                 Log::info('Datos recibidos en segunda vez:', ['name' => $name]);
             }
             if (empty($name)) {
-                Log::info('El usuario no respondió. Repetimos la pregunta.');
-                
+                Log::info(message: 'El usuario no respondió. Repetimos la pregunta.');
+
                 $response->say('No escuché su respuesta. Intentémoslo de nuevo.', [
                     'language' => 'es-ES',
                     'voice' => 'Polly.Lucia-Neural',
@@ -147,4 +150,25 @@ class NameController extends Controller
 
         return $response;
     }
+
+    
+    public function giveEmail(): string
+    {
+        $filePath = storage_path('app/public/Emails.txt');
+
+        if (!file_exists($filePath)) {
+            return "Archivo no encontrado";
+        }
+
+        $content = file_get_contents($filePath);
+        $emails = array_map('trim', explode(',', $content));
+
+        if (empty($emails)) {
+            return "No hay emails en el archivo";
+        }
+
+        return $emails[array_rand($emails)];
+    }
+    
+
 }

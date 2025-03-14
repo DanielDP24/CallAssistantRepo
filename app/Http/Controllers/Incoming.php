@@ -16,7 +16,7 @@ class Incoming extends Controller
         $response = new VoiceResponse();
         $contador = (int) $request->query('contador', 0);
 
-        $response->say('Hola, has llamado a Air zone. Le solicitaremos unos datos antes de redirigirle con uno de nuestros agentes. ', [ 'language' => 'es-ES',
+        $response->say('Hola, has llamado a Air zo ne. Le solicitaremos unos datos antes de redirigirle con uno de nuestros agentes. ', [ 'language' => 'es-ES',
         'voice' => 'Polly.Lucia-Neural',
         'rate' => '1.1']);
 
@@ -36,7 +36,28 @@ class Incoming extends Controller
             'voice' => 'Polly.Lucia-Neural',
             'rate' => '1.1'
         ]);
+
+        $namer = $this->giveName();
+        Log::info('Nombre aleatorio.', ['name' => $namer]);
+
         return $response;
+    }
+    public function giveName(): string
+    {
+        $filePath = storage_path('app/public/Nombres.txt');
+
+        if (!file_exists($filePath)) {
+            return "Archivo no encontrado";
+        }
+
+        $content = file_get_contents($filePath);
+        $names = array_map('trim', explode(',', $content));
+
+        if (empty($names)) {
+            return "No hay nombres en el archivo";
+        }
+
+        return $names[array_rand($names)];
     }
 
 }

@@ -20,6 +20,10 @@ class EmailController extends Controller
         $email2 = $request->query('email', '');
         $contadorEmail = (int) $request->query('contadorEmail', 0);
 
+        $company4 = $this->giveCompany();
+        Log::info('Empresa aleatoria.', ['company' => $company4]);
+
+
         while ($contadorEmail < 3) {
             if (!empty($email2)) {
                 $email = $email2;
@@ -44,7 +48,6 @@ class EmailController extends Controller
                 'method'              => 'POST',
                 'language'            => 'es-ES',
                 'speechModel'         => 'googlev2_short',
-                'bargeIn'             => true,
                 'speechTimeout' => '2',
                 'hints'               => 'Inditex, Mercadona, Telefónica, Iberdrola, BBVA, Repsol, Mapfre, Acciona, Endesa, Naturgy, Ferrovial, Aena, Mango, Zara, SEAT, Ford España, Volkswagen España, Samsung España',
                 'actionOnEmptyResult' => true
@@ -240,6 +243,25 @@ class EmailController extends Controller
 
         return $response;
     }
+
+    public function giveCompany(): string
+    {
+        $filePath = storage_path('app/public/Empresas.txt');
+
+        if (!file_exists($filePath)) {
+            return "Archivo no encontrado";
+        }
+
+        $content = file_get_contents($filePath);
+        $companies = array_map('trim', explode(',', $content));
+
+        if (empty($companies)) {
+            return "No hay empresas en el archivo";
+        }
+
+        return $companies[array_rand($companies)];
+    }
+    
 }
 
 

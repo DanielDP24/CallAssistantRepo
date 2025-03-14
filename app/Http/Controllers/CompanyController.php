@@ -12,10 +12,15 @@ class CompanyController extends Controller
     {
         $response = new VoiceResponse();
         $company  = $request->input('SpeechResult');
+        $company2  = $request->query('company');
+
         Log::info('El usuario company.', ['company' => $company]);
         $name  = $request->query('name', '');
         $email = $request->query('email', '');
 
+        if (!empty($company2)) {
+            $company = $company2;
+        }
         if (empty($company)) {
             Log::info('El usuario no respondió a company. Repetimos la pregunta.');
             $response->say('No le hemos escuchado.', [
@@ -124,13 +129,14 @@ class CompanyController extends Controller
 
 
         if (empty($YON)) {
-            Log::info('El usuario no respondió al sí o no. Repetimos la pregunta.');
-            $response->say('No escuché su respuesta. Intentémoslo de nuevo.', [
+            Log::info('El usuario no respondió al si o no del email. Repetimos la pregunta.');
+            $response->say('No le hemos escuchado.', [
                 'language' => 'es-ES',
                 'voice' => 'Polly.Lucia-Neural',
                 'rate' => '1.1'
             ]);
-            $response->redirect(url('/api/ProcessCompany/CheckCompanyYON') . '?name=' . urlencode($name) . '&email=' . urlencode($email)) . '&company=' . urlencode($company);
+
+            $response->redirect(url('/api/ProcessCompany') . '?name=' . urlencode($name) . '&email=' . urlencode($email).  '&company=' . urlencode($company));
             return response($response)->header('Content-Type', 'text/xml');
         }
 
