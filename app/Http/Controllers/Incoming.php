@@ -18,7 +18,7 @@ class Incoming extends Controller
 
         $response->say('Hola, has llamado a Air zo ne. Le solicitaremos unos datos antes de redirigirle con uno de nuestros agentes. ', [ 'language' => 'es-ES',
         'voice' => 'Polly.Lucia-Neural',
-        'rate' => '1.1']);
+        'rate' => '1']);
 
         $gather = $response->gather([
             'input'         => 'speech',
@@ -37,8 +37,7 @@ class Incoming extends Controller
             'rate' => '1.1'
         ]);
 
-        $namer = $this->giveName();
-        Log::info('Nombre aleatorio.', ['name' => $namer]);
+      Log::info('pedimos nombre.');
 
         return $response;
     }

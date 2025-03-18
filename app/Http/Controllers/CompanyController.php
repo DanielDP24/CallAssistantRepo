@@ -93,7 +93,7 @@ class CompanyController extends Controller
 
         $gather = $response->gather([
             'input'         => 'speech',
-            'timeout'       => 10,
+            'timeout'       => 13,
             'action'        => url('/api/ProcessCompany/CheckCompanyYON') . '?name=' . urlencode($name) . '&email=' . urlencode($email) . '&company=' . urlencode($processedCompany),
             'method'        => 'POST',
             'language'      => 'es-ES',

@@ -20,8 +20,8 @@ class EmailController extends Controller
         $email2 = $request->query('email', '');
         $contadorEmail = (int) $request->query('contadorEmail', 0);
 
-        $company4 = $this->giveCompany();
-        Log::info('Empresa aleatoria.', ['company' => $company4]);
+        // $company4 = $this->giveCompany();
+        // Log::info('Empresa aleatoria.', ['company' => $company4]);
 
 
         while ($contadorEmail < 3) {
@@ -43,7 +43,7 @@ class EmailController extends Controller
             
             $gather = $response->gather([
                 'input'               => 'speech',
-                'timeout'             => 5,
+                'timeout'             => 13,
                 'action'              => url('/api/ProcessEmail/CheckEmailYON') . '?name=' . urlencode($name) . '&email=' . urlencode($email)  . '&contadorEmail=' . urlencode($contadorEmail),
                 'method'              => 'POST',
                 'language'            => 'es-ES',
@@ -133,7 +133,7 @@ class EmailController extends Controller
         $email = $request->query('email', '');
         $gather = $response->gather([
             'input' => 'speech',
-            'timeout' => '8',
+            'timeout' => '13',
             'action' => url('/api/ProcessCompany') . '?name=' . urlencode($name) . '&email=' . urlencode($email),
             'method' => 'POST',
             'language' => 'es-ES',
@@ -263,30 +263,3 @@ class EmailController extends Controller
     }
     
 }
-
-
- // // Procesamiento del email
-        // $processedEmail = strtolower(trim($rawEmail));
-        // // $processedEmail = preg_replace([
-        // //     '/ arroba /i', 
-        // //     '/ punto /i', 
-        // //     '/\s+/', 
-        // //     '/ nzone /i', 
-        // //     '/ erzone /i', 
-        // //     '/ air son /i', 
-        // //     '/ airzon /i', 
-        // //     '/ arison /i', 
-        // //     '/ erzon /i', 
-        // //     '/ ayrzone /i', 
-        // //     '/ air zone /i', 
-        // //     '/ airz one /i', 
-        // //     '/ aison /i', 
-        // //     '/ aizona /i', 
-        // //     '/ airzoné /i'
-        // // ], ['@', '.', '', 'airzone', 'airzone', 'airzone', 'airzone', 'airzone', 'airzone', 'airzone', 'airzone', 'airzone', 'airzone', 'airzone', 'airzone'], $processedEmail);
-        
-        // // // Validación de email
-        // // if (!filter_var($processedEmail, FILTER_VALIDATE_EMAIL)) {
-        // //     Log::warning('Email inválido:', ['email' => $processedEmail]);
-        // //     $processedEmail = 'email inválido';
-        // // }

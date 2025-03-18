@@ -16,8 +16,8 @@ class NameController extends Controller
         $name = $request->input('SpeechResult'); //esto recibe pepe
         $contador = (int) $request->query('contador', 0);
         
-        $email = $this->giveEmail();
-        Log::info('email aleatorio.', ['email' => $email]);
+        // $email = $this->giveEmail();
+        // Log::info('email aleatorio.', ['email' => $email]);
 
 
         while ($contador < 3) {
@@ -42,7 +42,7 @@ class NameController extends Controller
 
             $gather = $response->gather([
                 'input' => 'dtmf speech',
-                'timeout' => '8',
+                'timeout' => '13',
                 'action' => url('/api/ProcessName/CheckNameYON') . '?name=' . urlencode($name) . '&contador=' . urlencode($contador),
                 'method' => 'POST',
                 'language' => 'es-ES',
@@ -50,7 +50,7 @@ class NameController extends Controller
                 'speechTimeout' => '2',
                 'actionOnEmptyResult' => true
             ]);
-            $gather->say('El nombre recibido es' . $name . ' confirme si es o no correcto', [
+            $gather->say('El nombre recibido es ' . $name . ' confirme si es o no correcto', [
                 'language' => 'es-ES',
                 'voice' => 'Polly.Lucia-Neural',
                 'rate' => '1.1'
