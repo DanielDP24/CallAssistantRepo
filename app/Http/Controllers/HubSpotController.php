@@ -12,10 +12,12 @@ use Twilio\TwiML\VoiceResponse;
 class HubSpotController extends Controller
 {
     private $client;
+    public string $filePath;
 
     public function __construct()
     {
         $this->client = Factory::createWithAccessToken(config('services.hubspot.apikey'));
+        $this->filePath = '/home/ddominguez/projects/Results.txt';
     }
     public function endCall(Request $request)
     {
@@ -24,28 +26,30 @@ class HubSpotController extends Controller
         $email = $request->input('email', '');
         $company = $request->input('company', '');
         $caller = $request->input('Caller', '');
-        
-        Log::info('Datos recibidos end call:', [
-            'name' => $firstname,
-            'email' => $email,
-            'company' => $company,
-            'caller' => $caller
-        ]);
+        file_put_contents(
+            $this->filePath,
+            "Datos recibidos CallAssistant\n" .
+            " - " . $firstname . "\n" .
+            " - " . $email . "\n" .
+            " - " . $company . "\n" .
+            "LLAMADA TERMINADA\n",
+            FILE_APPEND
+        );
         
         $this->CreateTicket($email, $firstname, $caller, $company);
 
-        $response->say('Ahora procederemos a almacenar los datos proporcionados, y le pondremos en contacto con uno de nuestros agentes.', [ 'language' => 'es-ES',
-        'voice' => 'Polly.Lucia-Neural',
-        'rate' => '1.1']);
-        $response->redirect(url('/api/redirectCall')); 
-        
+        $response->say('Ahora procederemos a almacenar los datos proporcionados, y le pondremos en contacto con uno de nuestros agentes.', [
+            'language' => 'es-ES',
+            'voice' => 'Polly.Lucia-Neural',
+            'rate' => '1.1'
+        ]);
+        $response->redirect(url('/api/redirectCall'));
+
         return $response;
     }
 
     public function CreateTicket($email, $firstname, $caller, $company)
     {
-
-        Log::info('company antes de crear ticket' . $company);
 
         $now = new DateTime();
         try {

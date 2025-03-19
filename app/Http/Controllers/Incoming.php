@@ -15,7 +15,6 @@ class Incoming extends Controller
         
         $response = new VoiceResponse();
         $contador = (int) $request->query('contador', 0);
-
         $response->say('Hola, has llamado a Air zo ne. Le solicitaremos unos datos antes de redirigirle con uno de nuestros agentes. ', [ 'language' => 'es-ES',
         'voice' => 'Polly.Lucia-Neural',
         'rate' => '1']);
@@ -37,7 +36,7 @@ class Incoming extends Controller
             'rate' => '1.1'
         ]);
 
-      Log::info('pedimos nombre.');
+        Log::info('pedimos nombre.');
 
         return $response;
     }

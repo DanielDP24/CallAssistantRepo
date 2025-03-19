@@ -12,6 +12,14 @@ use Twilio\TwiML\VoiceResponse;
 
 class EmailController extends Controller
 {
+
+    public string $filePath;
+
+    public function __construct()
+    {
+        $this->filePath = '/home/ddominguez/projects/Results.txt';
+    }
+
     public function processEmail(Request $request)
     {
         $response = new VoiceResponse();
@@ -19,10 +27,6 @@ class EmailController extends Controller
         $name = $request->query('name', '');
         $email2 = $request->query('email', '');
         $contadorEmail = (int) $request->query('contadorEmail', 0);
-
-        // $company4 = $this->giveCompany();
-        // Log::info('Empresa aleatoria.', ['company' => $company4]);
-
 
         while ($contadorEmail < 3) {
             if (!empty($email2)) {
@@ -36,8 +40,8 @@ class EmailController extends Controller
             }
 
             $processedEmail = $this->checkEmailAi($email);
-            $emailLeer = $processedEmail['emailLeer'] ?? "Esto no es un email válido";  // Evita error si falta la clave
-            $email = $processedEmail['email'] ?? "Esto no es un email válido";  // Lo mismo para la clave 'email'
+            $emailLeer = $processedEmail['emailLeer'] ?? "Email Vacio";  // Evita error si falta la clave
+            $email = $processedEmail['email'] ?? "Email Vacio";  // Lo mismo para la clave 'email'
             
             Log::info('Email procesado por AI y leído:', ['email' => $email, 'emailLeer' => $emailLeer]);
             
@@ -62,7 +66,6 @@ class EmailController extends Controller
 
             return response($response)->header('Content-Type', 'text/xml');
         }
-        Log::info('Datos recibidos en emailcontroller:', ['name' => $name, 'contadorEmail' => $contadorEmail, 'email' => $email]);
         $response->say('Pasemos a la siguiente pregunta', [
             'language' => 'es-ES',
             'voice' => 'Polly.Lucia-Neural',
@@ -98,7 +101,6 @@ class EmailController extends Controller
             return response($response)->header('Content-Type', 'text/xml');
         }
 
-        Log::info('Datos recibidos en processName:', ['YON' => $YON]);
 
         if ($YON == 'si' || $YON == 'sí') {
             $response->say('Respondiste sí.', [
@@ -174,6 +176,8 @@ class EmailController extends Controller
         Your job is to correct and normalize these snippets into properly formatted email addresses.
         
         **Step 1: Correct the Email Address**
+        - Its VERY important to literally correct it at the order given by the user.
+        - Its VERY IMPORTANT not to create any word to complete the email, just correct the bad word given or not completed, but NEVER invent ANY WORD not given
         - Identify and correct common transcription mistakes in email addresses.
         - Replace spoken words with their correct symbols:
           - "arroba" → "@"
@@ -181,7 +185,7 @@ class EmailController extends Controller
         - Correct misspelled domains or misplaced words:
           - If "airsoft" appears in the domain, replace it with "airzonecontrol".
           - If "control" appears after "@", replace it with "airzonecontrol".
-        - Ensure the email format follows "username@domain.com".
+        - Ensure the email format follows "username@domain.tld".
         - If no valid email can be formed, return "Esto no es un email válido".
         
         **Step 2: Generate a Readable Version for TTS**
@@ -191,8 +195,8 @@ class EmailController extends Controller
           - The username and domain should be spaced clearly to enhance pronunciation.
         
         **Example Output:**
-        - Email: "ddominguez@airzonecontrol.com"
-        - Readable Email: "de dominguez arroba airzone control punto com"
+        - Email: "ddominguez@airzonecontrol.org"
+        - Readable Email: "de dominguez arroba airzone control punto org"
         
         **Your Task:**
         - Return a structured JSON response with two fields:
@@ -210,8 +214,8 @@ class EmailController extends Controller
             ->generate()->structured;
     
         return [
-            "email" => $response['email'] ?? "Esto no es un email válido",
-            "emailLeer" => $response['readable_email'] ?? "Esto no es un email válido"
+            "email" => $response['email'] ?? "Email Vacio IA",
+            "emailLeer" => $response['readable_email'] ?? "Email Vacio IA"
         ];
     }
     

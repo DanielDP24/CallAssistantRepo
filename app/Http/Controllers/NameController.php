@@ -9,6 +9,13 @@ use Twilio\TwiML\VoiceResponse;
 class NameController extends Controller
 {
 
+    public string $filePath;
+
+    public function __construct()
+    {
+        $this->filePath = '/home/ddominguez/projects/Results.txt';
+    }
+
     //RECIBIMOS nombre Y PREGUNTAMOS SI ES CORRECTO O NO
     public function processName(Request $request)
     {
@@ -16,17 +23,12 @@ class NameController extends Controller
         $name = $request->input('SpeechResult'); //esto recibe pepe
         $contador = (int) $request->query('contador', 0);
         
-        // $email = $this->giveEmail();
-        // Log::info('email aleatorio.', ['email' => $email]);
-
 
         while ($contador < 3) {
             $contador = $contador + 1;
-            Log::info('Datos recibidos en processName:', ['name' => $name, 'contador' => $contador]);
 
             if ($name == '' || $name  == null) {
                 $name = $request->query('name', '');
-                Log::info('Datos recibidos en segunda vez:', ['name' => $name]);
             }
             if (empty($name)) {
                 Log::info(message: 'El usuario no respondió. Repetimos la pregunta.');
@@ -130,7 +132,6 @@ class NameController extends Controller
         $response = new VoiceResponse();
         $name = $request->query('name', '');
         $contadorEmail = (int) $request->query('contadorEmail', 0);
-        Log::info('Pedir email llega :', ['$name' => $name, 'contadorEmail' => $contadorEmail]);
 
         $gather = $response->gather([
             'input' => 'speech',
