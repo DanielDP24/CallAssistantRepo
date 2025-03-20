@@ -21,6 +21,8 @@ class NameController extends Controller
     {
         $response = new VoiceResponse();
         $name = $request->input('SpeechResult'); //esto recibe pepe
+        $id = $request->input('CallSid'); 
+        Log::info('El id de la llamada=' . json_encode($id));
         $contador = (int) $request->query('contador', 0);
         
 

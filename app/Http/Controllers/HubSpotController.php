@@ -17,7 +17,7 @@ class HubSpotController extends Controller
     public function __construct()
     {
         $this->client = Factory::createWithAccessToken(config('services.hubspot.apikey'));
-        $this->filePath = '/home/ddominguez/projects/Results.txt';
+        $this->filePath = '/home/ddominguez/projects/Results.csv';
     }
     public function endCall(Request $request)
     {
@@ -26,16 +26,7 @@ class HubSpotController extends Controller
         $email = $request->input('email', '');
         $company = $request->input('company', '');
         $caller = $request->input('Caller', '');
-        file_put_contents(
-            $this->filePath,
-            "Datos recibidos CallAssistant\n" .
-            " - " . $firstname . "\n" .
-            " - " . $email . "\n" .
-            " - " . $company . "\n" .
-            "LLAMADA TERMINADA\n",
-            FILE_APPEND
-        );
-        
+
         $this->CreateTicket($email, $firstname, $caller, $company);
 
         $response->say('Ahora procederemos a almacenar los datos proporcionados, y le pondremos en contacto con uno de nuestros agentes.', [
@@ -96,5 +87,24 @@ class HubSpotController extends Controller
         $dial->number('+34951125359');
 
         return response($response)->header('Content-Type', 'text/xml');
+    }
+    public function CreateJson(Request $request){
+        Log::info('LLega a json create'. json_encode($request->all()));
+        $firstname = $request->input('name', '');
+        $email = $request->input('email', '');
+        $company = $request->input('company', '');
+        $caller = $request->input('Caller', '');
+
+
+        file_put_contents(
+            $this->filePath,
+            "Datos recibidos CallAssistant\n" .
+            " - " . $firstname . "\n" .
+            " - " . $email . "\n" .
+            " - " . $company . "\n" .
+            "LLAMADA TERMINADA\n",
+            FILE_APPEND
+        );
+        
     }
 }
