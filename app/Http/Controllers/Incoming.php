@@ -2,44 +2,71 @@
 
 namespace App\Http\Controllers;
 
+use App\Service\TwilioService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Twilio\TwiML\VoiceResponse;
 
 class Incoming extends Controller
 {
+    public function __construct(private TwilioService $twilio){
 
-    public $contador = 0;
-    public function recieveCall(Request $request)
-    {
-        
-        $response = new VoiceResponse();
-        $contador = (int) $request->query('contador', 0);
-        $response->say('Hola, has llamado a Air zo ne. Le solicitaremos unos datos antes de redirigirle con uno de nuestros agentes. ', [ 'language' => 'es-ES',
-        'voice' => 'Polly.Lucia-Neural',
-        'rate' => '1']);
-
-        $gather = $response->gather([
-            'input'         => 'speech',
-            'timeout'       => '13',
-            'action'        => url('/api/ProcessName'). '?contador=' . urlencode($contador),
-            'method'        => 'POST',        
-            'language'      => 'es-ES',
-            'speechModel'   => 'googlev2_short',
-            'speechTimeout' => '1',
-            'hints'   => 'Juan, María, José, Jose, Carmen, Antonio, Ana, Manuel, Laura, Francisco, Lucia, David, Paula, Javier, Elena, Miguel, Sara, Carlos, Patricia, Pedro, Andrea, Luis, Marta, Sergio, Raúl, Rosa, Guillermo, Nuria, Alberto, Irene, Jorge, Beatriz, Ricardo, Cristina, Víctor, Silvia, Alejandro, Mario, Isabel, Diego, Gloria, Fernando, Claudia, Roberto, Teresa, Andrés, Mercedes, Julio, Sonia, Ramón, Inmaculada, Marcos, Concepción, Ángel, Estrella, Mariano, Lourdes, Jaime, Susana, Octavio, Esperanza, Adrián, Benito, Rebeca, Enrique, Soledad, Santiago, Amparo, Armando, Carolina, Eloy, Dolores, Damián, Fátima, Gonzalo, Jacinta, Hilario, Irma, Mauricio, Josefina, Ernesto, Liliana, Federico, Martina, Blanca, Oscar, Clara, Ismael, Juana, Hugo, Pilar, Valentín',
-        ]);
-
-        $gather->say('Por favor, dígame su nombre', [
-            'language' => 'es-ES',
-            'voice' => 'Polly.Lucia-Neural',
-            'rate' => '1.1'
-        ]);
-
-        Log::info('pedimos nombre.');
-
-        return $response;
     }
+    public function askName(Request $request): VoiceResponse
+    {
+        $uuid = $request->input("uuid", '');
+
+        if (empty($uuid)) {
+            $this->twilio->createUuid();
+        }
+
+        $this->twilio->askName();
+
+        return $this->twilio->response();
+    }
+
+    // public function recieveCall(Request $request)
+    // {
+    //     $response = new VoiceResponse();
+
+    //     $contadorName = (int) $request->query('contadorName', 0);
+    //     $contadorYon = (int) $request->query('contadorYon', 0);
+
+    //     //en caso que YON name se haya preguntado dos veces
+    //     if ($contadorYon >= 2) {
+    //         $response->redirect(url('/ProcessEmail/AskEmail'));
+    //         return response($response)->header('Content-Type', 'text/xml');;
+    //     }
+
+    //     Log::info('contador en name ' . $contadorName);
+    //     $response->say('Hola, has llamado a Air zo ne. Le solicitaremos unos datos antes de redirigirle con uno de nuestros agentes. ', [
+    //         'language' => 'es-ES',
+    //         'voice' => 'Polly.Lucia-Neural',
+    //         'rate' => '1'
+    //     ]);
+    //     //13 sec
+    //     $gather = $response->gather([
+    //         'input'         => 'speech',
+    //         'timeout'       => '6',
+    //         'action'        => url("/api/ProcessName"),
+    //         'method'        => 'POST',
+    //         'language'      => 'es-ES',
+    //         'speechModel'   => 'googlev2_short',
+    //         'speechTimeout' => '1',
+    //         'actionOnEmptyResult' => true,
+    //         'hints'   => 'Juan, María, José, Jose, Carmen, Antonio, Ana, Manuel, Laura, Francisco, Lucia, David, Paula, Javier, Elena, Miguel, Sara, Carlos, Patricia, Pedro, Andrea, Luis, Marta, Sergio, Raúl, Rosa, Guillermo, Nuria, Alberto, Irene, Jorge, Beatriz, Ricardo, Cristina, Víctor, Silvia, Alejandro, Mario, Isabel, Diego, Gloria, Fernando, Claudia, Roberto, Teresa, Andrés, Mercedes, Julio, Sonia, Ramón, Inmaculada, Marcos, Concepción, Ángel, Estrella, Mariano, Lourdes, Jaime, Susana, Octavio, Esperanza, Adrián, Benito, Rebeca, Enrique, Soledad, Santiago, Amparo, Armando, Carolina, Eloy, Dolores, Damián, Fátima, Gonzalo, Jacinta, Hilario, Irma, Mauricio, Josefina, Ernesto, Liliana, Federico, Martina, Blanca, Oscar, Clara, Ismael, Juana, Hugo, Pilar, Valentín',
+    //     ]);
+
+    //     $gather->say('Por favor, dígame su nombre', [
+    //         'language' => 'es-ES',
+    //         'voice' => 'Polly.Lucia-Neural',
+    //         'rate' => '1.1'
+    //     ]);
+
+    //     Log::info('pedimos nombre.');
+
+    //     return $response;
+    // }
     public function giveName(): string
     {
         $filePath = storage_path('app/public/Nombres.txt');
@@ -57,5 +84,4 @@ class Incoming extends Controller
 
         return $names[array_rand($names)];
     }
-
 }

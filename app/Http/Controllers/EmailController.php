@@ -24,7 +24,7 @@ class EmailController extends Controller
     {
         $response = new VoiceResponse();
         $email = $request->input('SpeechResult');
-        $name = $request->query('name', '');
+        $name = $request->query('name', 'Nom');
         $email2 = $request->query('email', '');
         $contadorEmail = (int) $request->query('contadorEmail', 0);
 
