@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Service\TwilioService;
 use EchoLabs\Prism\Enums\Provider;
 use EchoLabs\Prism\Prism;
 use EchoLabs\Prism\Schema\ObjectSchema;
@@ -15,11 +16,33 @@ class EmailController extends Controller
 
     public string $filePath;
 
-    public function __construct()
+    public function __construct(private TwilioService $twilio)
     {
         $this->filePath = '/home/ddominguez/projects/Results.txt';
     }
 
+    public function askEmail(Request $request): VoiceResponse {
+        $uuid = $request->input("uuid", '');
+
+        $this->twilio->askEmail();
+
+        return $this->twilio->response();
+    }
+
+    public function checkEmail(Request $request){
+        $email = $request->input('SpeechResult') ?? '';
+
+        $this->twilio->checkEmail($email);
+
+        return $this->twilio->laravelResponse();
+    }
+    
+    
+    
+    
+    
+    
+    
     public function processEmail(Request $request)
     {
         $response = new VoiceResponse();
@@ -74,7 +97,7 @@ class EmailController extends Controller
         return $this->AskCompany($request);
     }
 
-    public function CheckEmailYON(Request $request)
+    public function ConfirmEmail(Request $request)
     {
         $contadorEmail = (int) $request->query('contadorEmail', 0);
 

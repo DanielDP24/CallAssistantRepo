@@ -12,12 +12,14 @@ Route::get('/ManageCall', [Incoming::class, 'askName']); //RECIBIMOS LA LLAMADA
 
 Route::post('/ProcessName', [NameController::class, 'checkName']);//Preguntamos si o no
 
-Route::post('/ProcessName/CheckNameYON', [NameController::class, 'CheckNameYON']);//comprobamos el si o no
+Route::post('/ProcessName/CheckNameYON', [NameController::class, 'confirmName']);//comprobamos el si o no
 
 //Preguntamos email
-Route::post('/ProcessEmail', [EmailController::class, 'processEmail']); //Preguntamos si o no.
-Route::post('/ProcessEmail/CheckEmailYON', [EmailController::class, 'CheckEmailYON']);//comprobamos el sí o no
-Route::post('/ProcessEmail/AskEmail', [NameController::class, 'AskEmail']);//comprobamos el sí o no
+
+Route::post('/ProcessEmail/AskEmail', [EmailController::class, 'askEmail']);//pedimos el email
+
+Route::post('/ProcessEmail', [EmailController::class, 'checkEmail']); //Preguntamos si o no.
+Route::post('/ProcessEmail/CheckEmailYON', [EmailController::class, 'ConfirmEmail']);//comprobamos el sí o no
 
 //Preguntamos por la empresa
 Route::post('/ProcessCompany', [CompanyController::class, 'processCompany']); //preguntamos si o no.
