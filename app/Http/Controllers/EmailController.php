@@ -21,8 +21,7 @@ class EmailController extends Controller
         $this->filePath = '/home/ddominguez/projects/Results.txt';
     }
 
-    public function askEmail(Request $request): VoiceResponse {
-        $uuid = $request->input("uuid", '');
+    public function askEmail(): VoiceResponse {
 
         $this->twilio->askEmail();
 
@@ -34,7 +33,7 @@ class EmailController extends Controller
 
         $this->twilio->checkEmail($email);
 
-        return $this->twilio->laravelResponse();
+        return $this->twilio->response();
     }
     
     

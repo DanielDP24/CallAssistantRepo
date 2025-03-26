@@ -16,18 +16,19 @@ class NameController extends Controller
     {
         $this->filePath = '/home/ddominguez/projects/Results.txt';
     }
-    public function checkName (Request $request)
+    public function checkName(Request $request)
     {
         $name = $request->input('SpeechResult') ?? '';
-
+        Log::info('el nombre recibido es ' . $name); 
         $this->twilio->checkName($name);
 
         return $this->twilio->laravelResponse();
     }
-   
-    
-    public function confirmName (Request $request)
+
+
+    public function confirmName(Request $request): VoiceResponse
     {
+        //COJE LA RESPUESTA DEL YON
         $yon = $request->input('SpeechResult') ?? '';
 
         $this->twilio->confirmName($yon);
@@ -35,62 +36,6 @@ class NameController extends Controller
         return $this->twilio->response();
     }
 
-    public function processName(Request $request)
-    {
-   
-        $response = new VoiceResponse();
-        $name2 = $request->query('name2', '');
-        $name = $request->input('SpeechResult') ?? $name2;
-        $contadorName = (int) $request->query('contadorName', 0);
-        $contadorYon = (int) $request->query('contadorYon', 0);
-
-        Log::info('Antes if Process name', [
-            'contadorName' => $contadorName,
-            'name' => $name,
-            'name2' => $name2,
-            'contadorYon' => $contadorYon
-        ]);
-
-        if (!empty($name2)) {
-            Log::info('Name ahora es name2 ' . $contadorName);
-            $name = $name2;
-        }
-
-        if ($name == 'vacio' || $name == 'null' || $name  == '') {
-            if ($contadorName >= 1) {
-                Log::info('entra' . $contadorName);
-                return $this->finishCall();
-            }
-            $contadorName = $contadorName + 1;
-            $response->say('No escuché su respuesta. Intentémoslo de nuevo. Número de intentos ' . $contadorName, [
-                'language' => 'es-ES',
-                'voice' => 'Polly.Lucia-Neural',
-                'rate' => '1.1'
-            ]);
-            $response->redirect(url(path: '/api/ManageCall') . '?_method=GET' . "&contador=$contadorName");
-            return response($response)->header('Content-Type', 'text/xml');
-        }
-        $gather = $response->gather([
-            'input' => 'dtmf speech',
-            'timeout' => '13',
-            'action' => url('/api/ProcessName/CheckNameYON') . '?name=' . urlencode($name) . '&contador=' . urlencode($contadorName) . '&contadorYon=' . urlencode($contadorYon),
-            'method' => 'POST',
-            'language' => 'es-ES',
-            'speechModel' => 'googlev2_short',
-            'speechTimeout' => '2',
-            'actionOnEmptyResult' => true
-        ]);
-        $gather->say('El nombre recibido es ' . $name . ' confirme si es o no correcto', [
-            'language' => 'es-ES',
-            'voice' => 'Polly.Lucia-Neural',
-            'rate' => '1.1'
-        ]);
-
-        return response($response->__toString(), 200)->header('Content-Type', 'text/xml');
-
-        // Log::info('Datos recibidos en processName:', ['name' => $name, 'contador' => $contador]);
-        // return $this->AskEmail($request);
-    }
 
     public function giveEmail(): string
     {

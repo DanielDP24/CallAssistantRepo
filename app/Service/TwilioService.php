@@ -4,6 +4,8 @@ namespace App\Service;
 
 use EchoLabs\Prism\Enums\Provider;
 use EchoLabs\Prism\Prism;
+use EchoLabs\Prism\Schema\ObjectSchema;
+use EchoLabs\Prism\Schema\StringSchema;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Twilio\TwiML\Voice\Redirect;
@@ -54,11 +56,12 @@ class TwilioService
 
     public function askName(): void
     {
+        Log::info('pedimos nombre.');
+
         $justStarted = $this->getCallData("just_started") ?? '';
         if ($justStarted == '') {
             $this->say(speech: 'Hola, has llamado a Air zo ne. Le solicitaremos unos datos antes de redirigirle con uno de nuestros agentes.');
         }
-
         $this->saveCallData("just_started", 'comenzado');
 
         $this->gather(
@@ -66,10 +69,7 @@ class TwilioService
             hints: 'Juan, María, José, Jose, Carmen, Antonio, Ana, Manuel, Laura, Francisco, Lucia, David, Paula, Javier, Elena, Miguel, Sara, Carlos, Patricia, Pedro, Andrea, Luis, Marta, Sergio, Raúl, Rosa, Guillermo, Nuria, Alberto, Irene, Jorge, Beatriz, Ricardo, Cristina, Víctor, Silvia, Alejandro, Mario, Isabel, Diego, Gloria, Fernando, Claudia, Roberto, Teresa, Andrés, Mercedes, Julio, Sonia, Ramón, Inmaculada, Marcos, Concepción, Ángel, Estrella, Mariano, Lourdes, Jaime, Susana, Octavio, Esperanza, Adrián, Benito, Rebeca, Enrique, Soledad, Santiago, Amparo, Armando, Carolina, Eloy, Dolores, Damián, Fátima, Gonzalo, Jacinta, Hilario, Irma, Mauricio, Josefina, Ernesto, Liliana, Federico, Martina, Blanca, Oscar, Clara, Ismael, Juana, Hugo, Pilar, Valentín',
             speech: 'Por favor, dígame su nombre'
         );
-
-        Log::info('pedimos nombre.');
     }
-
 
     public function askEmail(): void
     {
@@ -77,34 +77,48 @@ class TwilioService
 
         $this->gather(
             action: url("/api/ProcessEmail"),
-            speech: "Por favor, $name, Ahora diganos su email"
+            speech: "Ahora por favor $name, facilítenos su email"
         );
 
         Log::info('Pedimos el email.');
     }
 
-
     public function checkName(string $name): void
     {
-        $this->saveCallData('temp_name', $name);
+        //GUARDAMOS NOMBRE TEMPORALMENTE
+        if ($this->getCallData('temp_name') == '') {
+            Log::info('no hay temp name');
+
+            $this->saveCallData('temp_name', $name);
+        } else {
+            Log::info('entra en lleno');
+            $name = $this->getCallData('temp_name') ?? '';
+            // Recupera el valor guardado
+        }
+
         $silenceNameCounter = (int) $this->getCallData("name_silence_counter") ?? 0;
         $isSilence = $this->isSilence($name);
 
+        //SI ES SILENCIO 2 VECES, CUELGA
         if ($isSilence && $silenceNameCounter >= 2) {
             $this->response->hangup();
             return;
         }
 
+        //PRIMERA VEZ SILENCIO, PASA Y SUMA CONTADOR
         if ($isSilence) {
+            //CREA CONTADOR Y SUMA
             $nameSilenceCounter = (int) $this->getCallData("name_silence_counter") ?? 0;
             $nameSilenceCounter++;
             $this->saveCallData("name_silence_counter", $nameSilenceCounter);
 
+            //REDIRIJE CON UUID YA QUE ES LA MISMA LLAMADA
             $this->say('No escuché su respuesta. Intentémoslo de nuevo. Número de intentos ' . $nameSilenceCounter);
             Log::info('reintentando');
             $this->response->redirect(url('/api/ManageCall') . '?_method=GET' . "&uuid=$this->uuid");
             return;
         }
+        //SI NO HAY SILENCIO, LLEVA EL NOMBRE A CONFIRMAR CON YON PREGUNTA.
         $this->saveCallData("name_silence_counter", 0);
         $this->gather(
             action: url('/api/ProcessName/CheckNameYON'),
@@ -112,15 +126,14 @@ class TwilioService
         );
     }
 
-    public function checkEmail(string $email): void
+    public function checkEmail(string $email)
     {
-        $this->saveCallData('temp_email', $email);
+        Log::info("\n llegamos a comprobar su email \n");
         $silenceEmailCounter = (int) $this->getCallData("email_silence_counter") ?? 0;
         $isSilence = $this->isSilence($email);
 
         if ($isSilence && $silenceEmailCounter >= 2) {
-            //PASAR A PEDIR EL NOMBRE DE LA COMPAÑÍA
-            //$this->response->hangup();
+            $this->response->redirect(url('/api/ProcessCompany/AskCompany') . "?uuid=$this->uuid");
             return;
         }
 
@@ -134,47 +147,131 @@ class TwilioService
             $this->response->redirect(url("/api/ManageCall?uuid=$this->uuid"));
             return;
         }
+        $schema = new ObjectSchema(
+            name: 'email_transcription',
+            description: 'Structured email transcription',
+            properties: [
+                new StringSchema('email', 'Processed email address for internal use'),
+                new StringSchema('readable_email', 'Email formatted for text-to-speech readability')
+            ],
+            requiredFields: ['email', 'readable_email']
+        );
+
+        $prompt = <<<EOT
+        You are an advanced email transcription proofreader. Users provide snippets of text generated by a speech-to-text program.
+        Your job is to correct and normalize these snippets into properly formatted email addresses.
+        
+        **Step 1: Correct the Email Address**
+        - Its VERY important to literally correct it at the order given by the user.
+        - Its VERY IMPORTANT not to create any word to complete the email, just correct the bad word given or not completed, but NEVER invent ANY WORD not given
+        - Identify and correct common transcription mistakes in email addresses.
+        - Replace spoken words with their correct symbols:
+          - "arroba" → "@"
+          - "punto com" → ".com"
+        - Correct misspelled domains or misplaced words:
+          - If "airsoft" appears in the domain, replace it with "airzonecontrol".
+          - If "control" appears after "@", replace it with "airzonecontrol".
+        - Ensure the email format follows "username@domain.tld".
+        - If no valid email can be formed, return "Esto no es un email válido".
+        
+        **Step 2: Generate a Readable Version for TTS**
+        - Convert the corrected email into a version optimized for text-to-speech (TTS):
+          - The "@" symbol should be spoken as "arroba".
+          - The ".com" should be spoken as "punto com".
+          - The username and domain should be spaced clearly to enhance pronunciation.
+        
+        **Example Output:**
+        - Email: "ddominguez@airzonecontrol.org"
+        - Readable Email: "de dominguez arroba airzone control punto org"
+        
+        **Your Task:**
+        - Return a structured JSON response with two fields:
+          1. "email": The correctly formatted email address.
+          2. "readable_email": The TTS-friendly version of the corrected email.
+        - If no valid email can be formed, return "Esto no es un email válido" for both fields.
+        
+        The provided email snippet: "$email"
+        EOT;
+
+        $response = Prism::structured()
+            ->using(Provider::OpenAI, 'gpt-4o-mini')   //esto para cambiar el tipo de open AI.
+            ->withSchema($schema)
+            ->withPrompt($prompt)
+            ->generate()->structured;
+
+
+        $email = $response['email'] ?? "Email Vacio IA";
+        $emailLeer = $response['readable_email'] ?? "Email Vacio IA";
+
+
+        $this->saveCallData('temp_email', $email);
+        $this->saveCallData('temp_email_leer', $emailLeer);
+
+        Log::info('Llega email y debería preguntar confirmación', ['uuid' => $this->uuid]);
+
         $this->saveCallData("email_silence_counter", 0);
         $this->gather(
-            action: url('/api/ProcessEmail/CheckEmailYON'),
-            speech: 'El email recibido es ' . $email . ' confirme si es o no correcto'
+            action: url("/api/ProcessEmail/CheckEmailYON?uuid=$this->uuid"),
+            speech: 'El email recibido es ' . $emailLeer . ' confirme si es o no correcto'
         );
     }
 
-    public function confirmName(string $yon): void
+    public function confirmName(string $yon)
     {
-        $yonSilenceNameCounter = (int) $this->getCallData("yon_silence_name_counter") ?? 0;
-
-        if ($this->isSilence($yon) && $yonSilenceNameCounter < 2) {
+        // Obtener contadores y evaluar si es silencio
+        $yonSilenceNameCounter = (int) ($this->getCallData("yon_silence_name_counter") ?? 0);
+        $isSilence = $this->isSilence($yon);
+    
+        // Si hay silencio dos veces, pasamos a email
+        if ($isSilence) {
+            if ($yonSilenceNameCounter >= 2) {
+                Log::info('\n --- Por silencio en confirm name preguntamos email ---- \n');
+                $this->response->redirect(url("/api/ProcessEmail/AskEmail?uuid=$this->uuid"));
+                return;
+            }
+    
+            // Aumentar el contador de silencio y reintentar la confirmación del nombre
             $yonSilenceNameCounter++;
             $this->saveCallData("yon_silence_name_counter", $yonSilenceNameCounter);
-
-            $this->gather(
-                action: url('/api/ProcessName'),
-                hints: "si, no",
-                speech: 'Intentémoslo de nuevo. Número de intentos ' . $yonSilenceNameCounter
-            );
-            Log::info('\n --- reintentando confirm name ---- \n');
-
+            Log::info('\n --- Reintentando confirm name ---- \n');
+            
+            $name = $this->getCallData('temp_name');
+            $this->checkName($name);
             return;
         }
+    
+        // Resetear el contador de silencio ya que no hubo silencio
         $this->saveCallData("yon_silence_name_counter", 0);
-
+    
+        // Obtener contador de "no" en confirmación
+        $yonNameCounter = (int) ($this->getCallData("yon_name_counter") ?? 0);
+    
+        // Si se rechaza el nombre dos veces, pasamos a email
         if (!$this->isAConfirm($yon)) {
-            $yonNameCounter = (int) $this->getCallData("yon_name_counter") ?? 0;
+            if ($yonNameCounter >= 2) {
+                Log::info('\n --- NO es correcto 3 veces ---- \n');
+                $this->response->redirect(url("/api/ProcessEmail/AskEmail?uuid=$this->uuid"));
+                return;
+            }
+    
+            // Aumentar el contador y redirigir para otro intento
             $yonNameCounter++;
+            $this->saveCallData('temp_name', '');
             $this->saveCallData("yon_name_counter", $yonNameCounter);
-            $this->response->redirect(url('/api/ManageCall') . '?_method=GET' . "&uuid=$this->uuid");
+            $this->response->redirect(url("/api/ManageCall") . '?_method=GET' . "&uuid=$this->uuid");
             return;
         }
+    
+        // Si el usuario confirma el nombre, reiniciamos contadores y continuamos
         $this->saveCallData("yon_name_counter", 0);
-
-
+        Log::info('\n --- SI, es correcto ---- \n');
+    
+        // Guardar el nombre definitivo y continuar
         $name = $this->getCallData('temp_name');
         $this->saveCallData('name', $name);
-        $this->response->redirect(url('/api/AskEmail') . "?uuid=$this->uuid");
-        return;
+        $this->response->redirect(url("/api/ProcessEmail/AskEmail?uuid=$this->uuid"));
     }
+    
 
     public function response(): VoiceResponse
     {
@@ -230,7 +327,7 @@ class TwilioService
     {
         $isParamValid = !($param == 'null' || empty($param));
 
-        Log::info($isParamValid ? 'true' : 'false');
+        Log::info('is param valid ' . $isParamValid ? 'true' : 'false');
         if (!$isParamValid) {
             return true;
         }
@@ -267,7 +364,7 @@ class TwilioService
     }
 
 
-    private function getCallData(string $key): ?string
+    public function getCallData(string $key): ?string
     {
         $dataAsJson = Cache::get("twilio_call_$this->uuid", '{}');
         $data = json_decode($dataAsJson, true);

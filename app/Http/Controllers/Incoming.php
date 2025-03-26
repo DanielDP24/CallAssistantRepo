@@ -4,15 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Service\TwilioService;
 use Illuminate\Http\Request;
-use Twilio\TwiML\VoiceResponse;
+use Illuminate\Support\Facades\Log;
 
 class Incoming extends Controller
 {
-    public function __construct(private TwilioService $twilio){
+    public function __construct(private TwilioService $twilio)
+    {
 
     }
-    public function askName(Request $request): VoiceResponse
+    public function askName(Request $request)
     {
+        Log::info('pedimos nombre.');
+
         $uuid = $request->input("uuid", '');
 
         if (empty($uuid)) {
@@ -21,7 +24,7 @@ class Incoming extends Controller
 
         $this->twilio->askName();
 
-        return $this->twilio->response();
+        return $this->twilio->laravelResponse();
     }
 
     public function giveName(): string
