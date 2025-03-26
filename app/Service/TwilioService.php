@@ -272,7 +272,7 @@ class TwilioService
         $this->response->redirect(url("/api/ProcessEmail/AskEmail?uuid=$this->uuid"));
     }
     
-
+//
     public function response(): VoiceResponse
     {
         return $this->response;
@@ -384,3 +384,16 @@ class TwilioService
         Cache::put("twilio_call_$this->uuid", $dataAsJson);
     }
 }
+
+
+
+
+
+
+
+
+
+/**
+ * ☉‿⊙
+ *  
+*/
