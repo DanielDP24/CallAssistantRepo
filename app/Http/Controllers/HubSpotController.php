@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Service\TwilioService;
 use DateTime;
 use HubSpot\Factory;
 use Illuminate\Http\Request;
@@ -14,29 +15,23 @@ class HubSpotController extends Controller
     private $client;
     public string $filePath;
 
-    public function __construct()
+    public function __construct(private TwilioService $twilio)
     {
         $this->client = Factory::createWithAccessToken(config('services.hubspot.apikey'));
-        $this->filePath = '/home/ddominguez/projects/Results.csv';
     }
     public function endCall(Request $request)
     {
-        $response = new VoiceResponse();
-        $firstname = $request->input('name', '');
+        Log::info('llega company');
+        $name = $request->input('name', '');
         $email = $request->input('email', '');
         $company = $request->input('company', '');
         $caller = $request->input('Caller', '');
 
-        $this->CreateTicket($email, $firstname, $caller, $company);
+        $this->CreateTicket($email, $name, $caller, $company);
 
-        $response->say('Ahora procederemos a almacenar los datos proporcionados, y le pondremos en contacto con uno de nuestros agentes.', [
-            'language' => 'es-ES',
-            'voice' => 'Polly.Lucia-Neural',
-            'rate' => '1.1'
-        ]);
-        $response->redirect(url('/api/redirectCall'));
-
-        return $response;
+        $this->twilio->say('Ahora procederemos a almacenar los datos proporcionados, y le pondremos en contacto con uno de nuestros agentes.');
+    
+        return redirect(url('/api/redirectCall'));
     }
 
     public function CreateTicket($email, $firstname, $caller, $company)

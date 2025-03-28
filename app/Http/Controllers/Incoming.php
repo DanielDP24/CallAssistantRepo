@@ -26,23 +26,5 @@ class Incoming extends Controller
 
         return $this->twilio->laravelResponse();
     }
-
-    public function giveName(): string
-    {
-        $filePath = storage_path('app/public/Nombres.txt');
-
-        if (!file_exists($filePath)) {
-            return "Archivo no encontrado";
-        }
-
-        $content = file_get_contents($filePath);
-        $names = array_map('trim', explode(',', $content));
-
-        if (empty($names)) {
-            return "No hay nombres en el archivo";
-        }
-
-        return $names[array_rand($names)];
-    }
     
 }

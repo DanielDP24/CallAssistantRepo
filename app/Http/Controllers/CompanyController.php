@@ -2,37 +2,52 @@
 
 namespace App\Http\Controllers;
 
+use App\Service\TwilioService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Twilio\TwiML\VoiceResponse;
 
 class CompanyController extends Controller
 {
-    public function processCompany(Request $request)
+
+    public function __construct(private TwilioService $twilio) {}
+
+    public function askCompany()
     {
-        $response = new VoiceResponse();
-        $company  = $request->input('SpeechResult');
-        $company2  = $request->query('company');
+        $this->twilio->askCompany();
 
-        Log::info('El usuario company.', ['company' => $company]);
-        $name  = $request->query('name', '');
-        $email = $request->query('email', '');
+        return $this->twilio->response();
+    }
+    public function checkCompany(Request $request)
+    {
+        $company = $request->input('SpeechResult') ?? '';
 
-        if (!empty($company2)) {
-            $company = $company2;
-        }
-        if (empty($company)) {
-            Log::info('El usuario no respondió a company. Repetimos la pregunta.');
-            $response->say('No le hemos escuchado.', [
-                'language' => 'es-ES',
-                'voice' => 'Polly.Lucia-Neural',
-                'rate' => '1.1'
-            ]);
-            $response->redirect(url('/api/ProcessCompany/AskCompany') . '?name=' . urlencode($name) . '&email=' . urlencode($email));
-            return response($response)->header('Content-Type', 'text/xml');
-        }
-        $processedCompany = preg_replace(
-            [
+        $this->twilio->checkCompany($company);
+
+        return $this->twilio->response();
+    }
+    public function confirmCompany(Request $request)
+    {
+        //COJE LA RESPUESTA DEL YON
+        $yon = $request->input('SpeechResult') ?? '';
+
+        $this->twilio->confirmCompany($yon);
+
+        return $this->twilio->response();
+    }
+}
+
+
+
+
+/**
+ * 
+ * 
+ * 
+ * 
+ *  $processedCompany = preg_replace(
+ * 
+ *          [
                 '/ punto /i',
                 '/ Air zone /i',
                 '/ air /i',
@@ -89,82 +104,4 @@ class CompanyController extends Controller
             $company
         );
 
-        Log::info('Datos recibidos en processCompany:', ['company' => $processedCompany]);
-
-        $gather = $response->gather([
-            'input'         => 'speech',
-            'timeout'       => 13,
-            'action'        => url('/api/ProcessCompany/CheckCompanyYON') . '?name=' . urlencode($name) . '&email=' . urlencode($email) . '&company=' . urlencode($processedCompany),
-            'method'        => 'POST',
-            'language'      => 'es-ES',
-            'speechModel'   => 'googlev2_short',
-            'speechTimeout' => '1',
-            'actionOnEmptyResult' => true
-        ]);
-        $gather->say(
-            'Gracias por facilitarnos el nombre de su empresa, ' . $processedCompany . ',  confirme si es o no correcto',
-            [
-                'language' => 'es-ES',
-                'voice' => 'Polly.Lucia-Neural',
-                'rate' => '1.1'
-            ]
-        );
-
-        return response($response->__toString(), 200)->header('Content-Type', 'text/xml');
-    }
-
-    public function CheckCompanyYON(Request $request)
-    {
-        $response = new VoiceResponse();
-        $emailController = new EmailController();
-
-        $YON = strtolower($request->input('SpeechResult'));
-        $YON =  $emailController->checkAnswerYONAI($YON);
-
-        Log::info('Datos recibidos en CheckCompanyYON:', ['YON' => $YON]);
-        $name  = $request->query('name', '');
-        $email = $request->query('email', '');
-        $company = $request->query('company', '');
-        Log::info('Datos recibidos en company YON:', ['company' => $company]);
-
-
-        if (empty($YON)) {
-            Log::info('El usuario no respondió al si o no del email. Repetimos la pregunta.');
-            $response->say('No le hemos escuchado.', [
-                'language' => 'es-ES',
-                'voice' => 'Polly.Lucia-Neural',
-                'rate' => '1.1'
-            ]);
-
-            $response->redirect(url('/api/ProcessCompany') . '?name=' . urlencode($name) . '&email=' . urlencode($email).  '&company=' . urlencode($company));
-            return response($response)->header('Content-Type', 'text/xml');
-        }
-
-        if ($YON == 'si' || $YON == 'sí') {
-            $response->say('Respondiste sí.', [
-                'language' => 'es-ES',
-                'voice' => 'Polly.Lucia-Neural',
-                'rate' => '1.1'
-            ]);
-            Log::info('Company antes de entrara en la url:', ['company' => $company]);
-
-            $response->redirect(url('/api/endCall') . '?name=' . urlencode($name) . '&email=' . urlencode($email) . '&company=' . urlencode($company));
-        } elseif ($YON == 'no') {
-            $response->say('Respondiste no. Intentémoslo de nuevo.', [
-                'language' => 'es-ES',
-                'voice' => 'Polly.Lucia-Neural',
-                'rate' => '1.1'
-            ]);
-            $response->redirect(url('/api/ProcessCompany/AskCompany') . '?name=' . urlencode($name) . '&email=' . urlencode($email));
-        } else {
-            $response->say('Por favor, responda únicamente con sí o no.', [
-                'language' => 'es-ES',
-                'voice' => 'Polly.Lucia-Neural',
-                'rate' => '1.1'
-            ]);
-            $response->redirect(url('/api/ProcessCompany/CheckCompanyYON') . '?name=' . urlencode($name) . '&email=' . urlencode($email));
-        }
-
-        return response($response->__toString(), 200)->header('Content-Type', 'text/xml');
-    }
-}
+ */

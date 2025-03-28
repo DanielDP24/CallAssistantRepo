@@ -35,26 +35,6 @@ class NameController extends Controller
 
         return $this->twilio->response();
     }
-
-
-    public function giveEmail(): string
-    {
-        $filePath = storage_path('app/public/Emails.txt');
-
-        if (!file_exists($filePath)) {
-            return "Archivo no encontrado";
-        }
-
-        $content = file_get_contents($filePath);
-        $emails = array_map('trim', explode(',', $content));
-
-        if (empty($emails)) {
-            return "No hay emails en el archivo";
-        }
-
-        return $emails[array_rand($emails)];
-    }
-
     public function finishCall()
     {
         $response = new VoiceResponse();
