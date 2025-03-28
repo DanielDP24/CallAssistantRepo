@@ -216,11 +216,7 @@ class TwilioService
           - Replace "." with "punto".
           - Separate words clearly for better pronunciation.
         
-        ### Output Format:
-        - Return a structured JSON response with two fields:
-          1. "email": The correctly formatted email address.
-          2. "readable_email": The TTS-friendly version of the corrected email.
-        - If no @ or arroba provided, valid email can't be formed, return "Esto no es un email válido" for both fields.
+        ### Outresponse->redirect(url("/api/ProcessCompany/AskCompany?uuid=$this->uuid"));@ or arroba provided, valid email can't be formed, return "Esto no es un email válido" for both fields.
         
         The provided email snippet: "$email"
         EOT;
@@ -311,13 +307,14 @@ class TwilioService
         Log::info("Pedimos el nombre de su empresa. junto al nombre de la persona $name");
 
         $this->gather(
-            action: url("/api/ProcessCompany?uuid=$this->uuid"),
+            action: url("/api/ProcessCompany"),
             speech: "Ahora por favor $name, facilítenos el nombre de su empresa"
         );
         Log::info('Pedimos el nombre de su empresa.');
     }
     public function checkCompany(string $company)
     {
+        Log::info("ENTRA EN CHECK COMPANY  $company ");
         //GUARDAMOS company TEMPORALMENTE
         if ($this->getCallData('temp_company') == '') {
             Log::info('no hay temp company');
@@ -347,14 +344,14 @@ class TwilioService
 
             //REDIRIJE CON UUID YA QUE ES LA MISMA LLAMADA
             $this->say('No escuché su respuesta. Intentémoslo de nuevo. Número de intentos ' . $companySilenceCounter);
-            Log::info('reintentando company');
-            $this->response->redirect(url("/ProcessCompany/AskCompany?uuid=$this->uuid"));
+            Log::info('reintentando company xxxxxxxxxxxxxXXXXX');
+            $this->askCompany();
             return;
         }
         //SI NO HAY SILENCIO, LLEVA company A CONFIRMAR CON YON PREGUNTA.
         $this->saveCallData("company_silence_counter", 0);
         $this->gather(
-            action: url("/api/ProcessCompany/CheckCompanyYON?uuid=$this->uuid"),
+            action: url("/api/ProcessCompany/CheckCompanyYON"),
             speech: 'El nombre de la empresa recibido es ' . $company . ' , confirme si es o no correcto'
         );
     }
