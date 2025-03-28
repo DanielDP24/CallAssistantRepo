@@ -24,6 +24,3 @@ Route::post('/ProcessCompany/CheckCompanyYON', [CompanyController::class, 'confi
 
 //Guardamos los datos.
 Route::post('/EndCall', [HubSpotController::class, 'endCall']);//Creamos el ticket mientras le decimos sus datos y le avisamos que se le va a redirigir
-Route::post('/redirectCall', [HubSpotController::class, 'RedirectCall']);// Redirigimos la llamada a un número de Aircall
-
-Route::post('/CreateJson', [HubSpotController::class, 'CreateJson']);// Redirigimos la llamada a un número de Aircall

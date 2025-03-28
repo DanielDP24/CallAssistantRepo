@@ -409,12 +409,13 @@ class TwilioService
         $this->saveCallData('company', $company);
 
         //Cogemos los datos y los en enviamos todos por url hacia hubspot
-        $name = $this->getCallData('name');
-        $email = $this->getCallData('email');
-        $company = $this->getCallData('company');
+        $name = str_replace(' ', '_', $this->getCallData('name') ?? '');
+        $email = str_replace(' ', '_', $this->getCallData('email') ?? '');
+        $company = str_replace(' ', '_', $this->getCallData('company') ?? ''); 
 
         Log::info('datos finales', ["\n name" => $name, "\n email" => $email, "\n company" => $company]);
-        $this->response->redirect(url("/api/EndCall?uuid=$this->uuid&name=$name&email=$email&company=$company"));
+        $this->response->redirect(url(path: "/api/EndCall?uuid=$this->uuid&name=$name&email=$email&company=$company"));
+        return;
     }
 
 

@@ -21,17 +21,15 @@ class HubSpotController extends Controller
     }
     public function endCall(Request $request)
     {
-        Log::info('llega company');
-        $name = $request->input('name', '');
-        $email = $request->input('email', '');
-        $company = $request->input('company', '');
+        Log::info('llega a end call');
+        $name = $request->input('name') ?? 'Vacio, preguntar';
+        $email = $request->input('email') ?? 'Vacio, preguntar';
+        $company = $request->input('company') ?? 'Vacio, preguntar';
         $caller = $request->input('Caller', '');
+        Log::info('datos en END COMPANY', ["\n name" => $name, "\n email" => $email, "\n company" => $company]);
 
         $this->CreateTicket($email, $name, $caller, $company);
-
-        $this->twilio->say('Ahora procederemos a almacenar los datos proporcionados, y le pondremos en contacto con uno de nuestros agentes.');
-    
-        return redirect(url('/api/redirectCall'));
+        return $this->RedirectCall($caller);
     }
 
     public function CreateTicket($email, $firstname, $caller, $company)
@@ -47,7 +45,7 @@ class HubSpotController extends Controller
                 'subject' => 'Llamada de Twilio',
                 'content' => 'Empresa: ' . $company . ', Nombre: ' . $firstname . ' , Email: ' . $email . ' , Teléfono: ' . $caller,
             ]);
-            $quepasa = $this->client->crm()->tickets()->basicApi()->create($ticketInput);
+            $this->client->crm()->tickets()->basicApi()->create($ticketInput);
         } catch (\Exception $e) {
             $errorData = [
                 'message' => $e->getMessage(),
@@ -64,42 +62,19 @@ class HubSpotController extends Controller
         }
     }
 
-    public function RedirectCall(Request $request)
+    public function RedirectCall($caller)
     {
         $response = new VoiceResponse();
+        $this->twilio->say(speech: 'Ahora procederemos a almacenar los datos proporcionados, y le pondremos en contacto con uno de nuestros agentes.');
 
-        $caller = $request->input('Caller');
         Log::info('Redirigiendo la llamada de ' . $caller . ' a +34 951 12 53 59');
 
-        $response->say('Estamos transfiriendo su llamada...', [
-            'language' => 'es-ES',
-            'voice' => 'Polly.Lucia-Neural',
-            'rate' => '1.1'
-        ]);
+        $this->twilio->say('Estamos transfiriendo su llamada...');
 
         // Transferimos la llamada en curso al número de destino
-        $dial = $response->dial('answerOnBridge="true"');
+        $dial = $response->dial();
         $dial->number('+34951125359');
-
+        Log::info("La response en xmls es esta          $response");
         return response($response)->header('Content-Type', 'text/xml');
-    }
-    public function CreateJson(Request $request){
-        Log::info('LLega a json create'. json_encode($request->all()));
-        $firstname = $request->input('name', '');
-        $email = $request->input('email', '');
-        $company = $request->input('company', '');
-        $caller = $request->input('Caller', '');
-
-
-        file_put_contents(
-            $this->filePath,
-            "Datos recibidos CallAssistant\n" .
-            " - " . $firstname . "\n" .
-            " - " . $email . "\n" .
-            " - " . $company . "\n" .
-            "LLAMADA TERMINADA\n",
-            FILE_APPEND
-        );
-        
     }
 }
