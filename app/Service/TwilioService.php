@@ -61,7 +61,7 @@ class TwilioService
             return;
         }
 
-        //PRIMERA VEZ SILENCIO, PASA Y SUMA CONTADOR
+        //PRIMERA VEZ SILENCIO, PASA Y SUMA CONTADOR0
         if ($isSilence) {
             //CREA CONTADOR Y SUMA
             $nameSilenceCounter = (int) $this->getCallData("name_silence_counter") ?? 0;
@@ -237,7 +237,6 @@ class TwilioService
             ->withSchema($schema)
             ->withPrompt($prompt)
             ->generate()->structured;
-
 
         $email = $response['email'] ?? "Email Vacio IA";
         $emailLeer = $response['readable_email'] ?? "Email Vacio IA";
@@ -451,7 +450,7 @@ class TwilioService
 
         $gather = $this->response->gather([
             'input' => 'speech',
-            'timeout' => '6',
+            'timeout' => '8',
             'action' => $action . "?uuid=$this->uuid",
             'method' => 'POST',
             'language' => 'es-ES',

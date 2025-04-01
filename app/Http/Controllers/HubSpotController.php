@@ -61,20 +61,29 @@ class HubSpotController extends Controller
             ], 500);
         }
     }
-
+//Me falta que no dice esto. Flujo si funciona.
     public function RedirectCall($caller)
     {
         $response = new VoiceResponse();
-        $this->twilio->say(speech: 'Ahora procederemos a almacenar los datos proporcionados, y le pondremos en contacto con uno de nuestros agentes.');
+        $response->say( 'Ahora procederemos a almacenar los datos proporcionados, y le pondremos en contacto con uno de nuestros agentes.',[
+            'language' => 'es-ES',
+            'voice' => 'Polly.Lucia-Neural',
+            'rate' => '1'
+        ]);
 
         Log::info('Redirigiendo la llamada de ' . $caller . ' a +34 951 12 53 59');
 
-        $this->twilio->say('Estamos transfiriendo su llamada...');
+        $response->say('Estamos transfiriendo su llamada...',[
+            'language' => 'es-ES',
+            'voice' => 'Polly.Lucia-Neural',
+            'rate' => '1'
+        ]);
 
         // Transferimos la llamada en curso al número de destino
         $dial = $response->dial();
         $dial->number('+34951125359');
-        Log::info("La response en xmls es esta          $response");
+        Log::info("La response en xmls es esta    $response");
         return response($response)->header('Content-Type', 'text/xml');
     }
+    
 }
