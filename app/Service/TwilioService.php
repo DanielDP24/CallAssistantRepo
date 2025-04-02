@@ -8,7 +8,6 @@ use EchoLabs\Prism\Schema\ObjectSchema;
 use EchoLabs\Prism\Schema\StringSchema;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Twilio\TwiML\Voice\Redirect;
 use Twilio\TwiML\VoiceResponse;
 
 class TwilioService
