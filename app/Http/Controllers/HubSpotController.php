@@ -32,8 +32,10 @@ class HubSpotController extends Controller
         return $this->RedirectCall($caller);
     }
 
-    public function CreateTicket($email, $firstname, $caller, $company)
+    public function CreateTicket($email, $name, $caller, $company)
     {
+        $name = str_replace('_', ' ', $name);
+        $company = str_replace('_', ' ', $company);
 
         $now = new DateTime();
         try {
@@ -43,7 +45,7 @@ class HubSpotController extends Controller
                 'hs_pipeline_stage' => '1',
                 'createdate' => $now,
                 'subject' => 'Llamada de Twilio',
-                'content' => 'Empresa: ' . $company . ', Nombre: ' . $firstname . ' , Email: ' . $email . ' , Teléfono: ' . $caller,
+                'content' => 'Empresa: ' . $company . ', Nombre: ' . $name . ' , Email: ' . $email . ' , Teléfono: ' . $caller,
             ]);
             $this->client->crm()->tickets()->basicApi()->create($ticketInput);
         } catch (\Exception $e) {
