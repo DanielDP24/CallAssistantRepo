@@ -234,9 +234,11 @@ class TwilioService
             $response = Prism::structured()
             ->using(Provider::OpenAI, 'gpt-4o-mini')
             ->withSchema($schema)
-            ->withPrompt('Review the movie Inception')
+            ->withPrompt($prompt)
             ->asStructured();
         
+            Log::info(json_encode($response->structured, JSON_PRETTY_PRINT));
+
         $email = $response->structured['email'] ?? "Email Vacio IA";
         $emailLeer = $response->structured['readable_email'] ?? "Email Vacio IA";
 
