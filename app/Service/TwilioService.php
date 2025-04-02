@@ -2,10 +2,10 @@
 
 namespace App\Service;
 
-use EchoLabs\Prism\Enums\Provider;
-use EchoLabs\Prism\Prism;
-use EchoLabs\Prism\Schema\ObjectSchema;
-use EchoLabs\Prism\Schema\StringSchema;
+use Prism\Prism\Enums\Provider;
+use Prism\Prism\Prism;
+use Prism\Prism\Schema\ObjectSchema;
+use Prism\Prism\Schema\StringSchema;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Twilio\TwiML\VoiceResponse;
@@ -231,14 +231,14 @@ class TwilioService
         The provided email snippet: "$email"
         EOT;
 
-        $response = Prism::structured()
-            ->using(Provider::OpenAI, 'gpt-4o-mini')   //esto para cambiar el tipo de open AI.
+            $response = Prism::structured()
+            ->using(Provider::OpenAI, 'gpt-4o-mini')
             ->withSchema($schema)
-            ->withPrompt($prompt)
-            ->generate()->structured;
-
-        $email = $response['email'] ?? "Email Vacio IA";
-        $emailLeer = $response['readable_email'] ?? "Email Vacio IA";
+            ->withPrompt('Review the movie Inception')
+            ->asStructured();
+        
+        $email = $response->structured['email'] ?? "Email Vacio IA";
+        $emailLeer = $response->structured['readable_email'] ?? "Email Vacio IA";
 
         //GUARDA TEMPORALMENTE LOS EMAILS, TANTO EL QUE SE GUARDA COMO EL QUE SE LEE
         $this->saveCallData('temp_email', $email);

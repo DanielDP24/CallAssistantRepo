@@ -3,12 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Service\TwilioService;
-use EchoLabs\Prism\Enums\Provider;
-use EchoLabs\Prism\Prism;
-use EchoLabs\Prism\Schema\ObjectSchema;
-use EchoLabs\Prism\Schema\StringSchema;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Twilio\TwiML\VoiceResponse;
 
 class EmailController extends Controller
