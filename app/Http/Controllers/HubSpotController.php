@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use \HubSpot\Client\Crm\Tickets\Model as TicketModel;
 use Illuminate\Support\Facades\Log;
 use Twilio\TwiML\VoiceResponse;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 
 class HubSpotController extends Controller
 {
@@ -63,11 +65,10 @@ class HubSpotController extends Controller
             ], 500);
         }
     }
-//Me falta que no dice esto. Flujo si funciona.
     public function RedirectCall($caller)
     {
         $response = new VoiceResponse();
-        $response->say( 'Ahora procederemos a almacenar los datos proporcionados, y le pondremos en contacto con uno de nuestros agentes.',[
+        $response->say('Ahora procederemos a almacenar los datos proporcionados, y le pondremos en contacto con uno de nuestros agentes.', [
             'language' => 'es-ES',
             'voice' => 'Polly.Lucia-Neural',
             'rate' => '1'
@@ -75,7 +76,7 @@ class HubSpotController extends Controller
 
         Log::info('Redirigiendo la llamada de ' . $caller . ' a +34 951 12 53 59');
 
-        $response->say('Estamos transfiriendo su llamada...',[
+        $response->say('Estamos transfiriendo su llamada...', [
             'language' => 'es-ES',
             'voice' => 'Polly.Lucia-Neural',
             'rate' => '1'
@@ -87,5 +88,27 @@ class HubSpotController extends Controller
         Log::info("La response en xmls es esta    $response");
         return response($response)->header('Content-Type', 'text/xml');
     }
-    
+
+
+    public function saveInBBDD($nameGiven, $nameRecieved,$emailGiven, $emailRecieved,$companyGiven, $companyRecieved) {
+        $names = [$nameGiven, $nameRecieved];
+        $emails = [$emailGiven, $emailRecieved];
+        $companies = [$companyGiven, $companyRecieved];
+    }
+    public function externSaveCallData(Request $request): void
+    {
+
+        $key = $request->input('key');
+        $value = $request->input('value');
+        $uuid = $this->twilio->getCallData('uuid');
+
+        $dataAsJson = Cache::get("twilio_call_$uuid", '{}');
+        $data = json_decode(json: $dataAsJson, associative: true);
+        Log::info("Guardamos externSaveData $key --- $value");
+
+        $data[$key] = $value;
+        $dataAsJson = json_encode(value: $data);
+
+        Cache::put("twilio_call_$uuid", $dataAsJson);
+    }
 }
