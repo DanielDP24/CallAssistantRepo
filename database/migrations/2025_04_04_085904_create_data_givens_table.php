@@ -14,11 +14,10 @@ return new class extends Migration
         Schema::create('data_givens', function (Blueprint $table) {
             $table->id();
             $table->uuid('uuid');
-            $table->string('name');
-            $table->string('email');
-            $table->string('company');
+            $table->string('name_given');
+            $table->string('email_given');
+            $table->string('company_given');
             $table->string('callerNum');
-            $table->timestamps();
         });
     }
     

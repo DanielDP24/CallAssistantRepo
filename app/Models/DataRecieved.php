@@ -6,5 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class DataRecieved extends Model
 {
-    //
+
+    public $timestamps = false;
+    protected $fillable = [
+        'uuid',
+        'name',
+        'email',
+        'company',
+        'callerNum',
+    ];
+
+    
 }

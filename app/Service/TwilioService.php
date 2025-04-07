@@ -396,15 +396,19 @@ class TwilioService
 
         // Obtener contador de "no" en confirmación
         $yonCompanyCounter = (int) ($this->getCallData("yon_company_counter") ?? 0);
-        
+
 
         //Cogemos los datos y los en enviamos todos por url hacia hubspot
         $company = $this->getCallData('temp_company');
         $this->saveCallData('company', $company);
-        
+
         $name = rawurlencode($this->getCallData('name') ?? '');
+        $nameGiven = rawurlencode($this->getCallData('name_given') ?? '');
         $email = rawurlencode($this->getCallData('email') ?? '');
+        $emailGiven = rawurlencode($this->getCallData('email_given') ?? '');
         $company = rawurlencode($this->getCallData('company') ?? '');
+        $companyGiven = rawurlencode($this->getCallData('company_given') ?? '');
+
 
         // Si se rechaza el company dos veces, pasamos a hubspot y redirigimos
         if (!$this->isAConfirm($yon)) {
@@ -414,9 +418,13 @@ class TwilioService
                 $this->response->redirect(url()->query(path: "/api/EndCall", query: [
                     'uuid' => $this->uuid,
                     'name' => $name,
+                    'name_given' => $nameGiven,
                     'email' => $email,
-                    'company' => $company
-                ]));                return;
+                    'email_given' => $emailGiven,
+                    'company' => $company,
+                    'company_given' => $companyGiven
+                ]));
+                return;
             }
             Log::info('\n --- NO es correcto ' . $yonCompanyCounter . ' veces ---- \n');
             // Aumentar el contador y redirigir para otro intento
@@ -430,7 +438,7 @@ class TwilioService
         // Si el usuario confirma el nombre de la empresa, reiniciamos contadores y continuamos
         $this->saveCallData("yon_company_counter", 0);
         Log::info('\n --- SI, es correcto company ---- \n');
-        
+
 
         Log::info('datos finales', ["\n name" => $name, "\n email" => $email, "\n company" => $company]);
 
@@ -530,14 +538,14 @@ class TwilioService
          USER INPUT: $yon
         EOT;
         $response = Prism::structured()
-        ->using(Provider::OpenAI, 'gpt-4o-mini')
-        ->withSchema($schema)
-        ->withPrompt($prompt)
-        ->asStructured()->text;
+            ->using(Provider::OpenAI, 'gpt-4o-mini')
+            ->withSchema($schema)
+            ->withPrompt($prompt)
+            ->asStructured()->text;
 
         $data = json_decode($response, true);
-        $response = $data['yon']; 
-        
+        $response = $data['yon'];
+
         if ($response == 'si' || $response == 'sí') {
             return true;
         }

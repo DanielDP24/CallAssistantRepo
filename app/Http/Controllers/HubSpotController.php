@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DataGiven;
+use App\Models\DataRecieved;
 use App\Service\TwilioService;
 use DateTime;
 use HubSpot\Factory;
@@ -24,16 +26,60 @@ class HubSpotController extends Controller
     public function endCall(Request $request)
     {
         Log::info('llega a end call');
-        $name = $request->input('name') ?? 'Vacio, preguntar';
-        $email = $request->input('email') ?? 'Vacio, preguntar';
-        $company = $request->input('company') ?? 'Vacio, preguntar';
-        $caller = $request->input('Caller', '');
-        Log::info('datos en END COMPANY', ["\n name" => $name, "\n email" => $email, "\n company" => $company]);
+    
+        // --- Decodificar inputs ---
+        $uuid = urldecode($request->input('uuid'));
 
+        $name = urldecode($request->input('name') ?? 'Vacio, preguntar');
+        $nameGiven = urldecode($request->input('name_given') ?? $name);
+    
+        $email = urldecode($request->input('email') ?? 'Vacio, preguntar');
+        $emailGiven = urldecode($request->input('email_given') ?? $email);
+    
+        $company = urldecode($request->input('company') ?? 'Vacio, preguntar');
+        $companyGiven = urldecode($request->input('company_given') ?? $company);
+    
+        $caller = $request->input('Caller', '');
+    
+        
+        Log::info('datos en END COMPANY', [
+            "\n uuid" => $uuid,
+            "\n name" => $name,
+            "\n nameGiven" => $nameGiven,
+            "\n email" => $email,
+            "\n emailGiven" => $emailGiven,
+            "\n company" => $company,
+            "\n companyGiven" => $companyGiven,
+            "\n caller" => $caller
+        ]);
+        Log::info("lo que sale de recieved es  , " .  $uuid);
+
+    
+        // --- INSERTAR EN data_receiveds ---
+        $received = DataRecieved::create([
+            'uuid' => $uuid, 
+            'name' => $name,
+            'email' => $email,
+            'company' => $company,
+            'callerNum' => $caller,
+        ]);
+    
+        // --- INSERTAR EN data_givens usando el ID del anterior ---
+        DataGiven::create([
+            'id' => $received->id,
+            'uuid' => $uuid, 
+            'name_given' => $nameGiven,
+            'email_given' => $emailGiven,
+            'company_given' => $companyGiven,
+            'callerNum' => $caller,
+
+        ]);
+    
+        // --- Opcional: acciones adicionales ---
         $this->CreateTicket($email, $name, $caller, $company);
         return $this->RedirectCall($caller);
     }
-
+    
     public function CreateTicket($email, $name, $caller, $company)
     {
         $name = str_replace('_', ' ', $name);
@@ -89,12 +135,6 @@ class HubSpotController extends Controller
         return response($response)->header('Content-Type', 'text/xml');
     }
 
-
-    public function saveInBBDD($nameGiven, $nameRecieved,$emailGiven, $emailRecieved,$companyGiven, $companyRecieved) {
-        $names = [$nameGiven, $nameRecieved];
-        $emails = [$emailGiven, $emailRecieved];
-        $companies = [$companyGiven, $companyRecieved];
-    }
     public function externSaveCallData(Request $request): void
     {
 
