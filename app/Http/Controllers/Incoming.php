@@ -8,16 +8,18 @@ use Illuminate\Support\Facades\Log;
 
 class Incoming extends Controller
 {
-    public function __construct(private TwilioService $twilio)
-    {
 
+    public function __construct(private TwilioService $twilio, private DatabaseController $DatabaseController)
+    {
     }
     public function askName(Request $request)
     {
         Log::info('pedimos nombre.');
+        
+        $callSid = request()->get('CallSid');
+        $this->DatabaseController->insertCallSid($callSid);
 
         $uuid = $request->input("uuid", '');
-
         if (empty($uuid)) {
             $this->twilio->createUuid();
         }

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Service\TwilioService;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Log;
 
 class CompanyController extends Controller
 {

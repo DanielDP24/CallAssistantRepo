@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Http\Controllers\DatabaseController;
 use Prism\Prism\Enums\Provider;
 use Prism\Prism\Prism;
 use Prism\Prism\Schema\ObjectSchema;
@@ -15,10 +16,11 @@ class TwilioService
     private readonly Voiceresponse $response;
     private string $uuid;
 
-    public function __construct()
+    public function __construct( private DatabaseController $DatabaseController)
     {
         $this->response = new VoiceResponse;
         $this->uuid = request()->input('uuid', '');
+        
     }
 
     //NAME
@@ -134,6 +136,7 @@ class TwilioService
         // Guardar el nombre definitivo y continuar
         $name = $this->getCallData('temp_name');
         $this->saveCallData('name', $name);
+        $this->DatabaseController->insertField('name', $name);
         $this->response->redirect(url("/api/ProcessEmail/AskEmail?uuid=$this->uuid"));
     }
 
@@ -307,6 +310,8 @@ class TwilioService
         $email = $this->getCallData('temp_email');
         Log::info('\n --- SI, es correcto el EMAIL ---- \n', ["email en confirmación" => $email]);
         $this->saveCallData('email', $email);
+        $this->DatabaseController->insertField('email', $email);
+
         $this->response->redirect(url("/api/ProcessCompany/AskCompany?uuid=$this->uuid"));
     }
 
@@ -401,6 +406,7 @@ class TwilioService
         //Cogemos los datos y los en enviamos todos por url hacia hubspot
         $company = $this->getCallData('temp_company');
         $this->saveCallData('company', $company);
+        $this->DatabaseController->insertField('company', $company);
 
         $name = rawurlencode($this->getCallData('name') ?? '');
         $nameGiven = rawurlencode($this->getCallData('name_given') ?? '');

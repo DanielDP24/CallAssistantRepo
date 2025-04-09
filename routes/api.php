@@ -21,7 +21,6 @@ Route::post('/ProcessEmail/CheckEmailYON', [EmailController::class, 'confirmEmai
 Route::post('/ProcessCompany/AskCompany', [CompanyController::class, 'askCompany']);//comprobamos el sí o no
 Route::post('/ProcessCompany', [CompanyController::class, 'checkCompany']); //preguntamos si o no.
 Route::post('/ProcessCompany/CheckCompanyYON', [CompanyController::class, 'confirmCompany']); //Comprobamos el sí o no
-//Ruta para CallCaller temporal
-Route::post('/saveCallData',[HubSpotController::class, 'externSaveCallData']);
+
 //Guardamos los datos.
 Route::post('/EndCall', [HubSpotController::class, 'endCall']);//Creamos el ticket mientras le decimos sus datos y le avisamos que se le va a redirigir

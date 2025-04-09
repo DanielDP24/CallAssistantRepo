@@ -18,8 +18,9 @@ class HubSpotController extends Controller
 {
     private $client;
     public string $filePath;
+   
 
-    public function __construct(private TwilioService $twilio)
+    public function __construct(private TwilioService $twilio, private DatabaseController $DatabaseController)
     {
         $this->client = Factory::createWithAccessToken(config('services.hubspot.apikey'));
     }
@@ -39,8 +40,9 @@ class HubSpotController extends Controller
         $company = urldecode($request->input('company') ?? 'Vacio, preguntar');
         $companyGiven = urldecode($request->input('company_given') ?? $company);
     
-        $caller = $request->input('Caller', '');
-    
+        $caller = request()->input('Caller');
+        $this->DatabaseController->insertField('callerNum', $caller);
+
         
         Log::info('datos en END COMPANY', [
             "\n uuid" => $uuid,
@@ -55,25 +57,7 @@ class HubSpotController extends Controller
         Log::info("lo que sale de recieved es  , " .  $uuid);
 
     
-        // --- INSERTAR EN data_receiveds ---
-        $received = DataRecieved::create([
-            'uuid' => $uuid, 
-            'name' => $name,
-            'email' => $email,
-            'company' => $company,
-            'callerNum' => $caller,
-        ]);
-    
-        // --- INSERTAR EN data_givens usando el ID del anterior ---
-        DataGiven::create([
-            'id' => $received->id,
-            'uuid' => $uuid, 
-            'name_given' => $nameGiven,
-            'email_given' => $emailGiven,
-            'company_given' => $companyGiven,
-            'callerNum' => $caller,
-
-        ]);
+        // --- INSERTAR EN data_givens usando el ID del anterior --
     
         // --- Opcional: acciones adicionales ---
         $this->CreateTicket($email, $name, $caller, $company);
@@ -135,20 +119,4 @@ class HubSpotController extends Controller
         return response($response)->header('Content-Type', 'text/xml');
     }
 
-    public function externSaveCallData(Request $request): void
-    {
-
-        $key = $request->input('key');
-        $value = $request->input('value');
-        $uuid = $this->twilio->getCallData('uuid');
-
-        $dataAsJson = Cache::get("twilio_call_$uuid", '{}');
-        $data = json_decode(json: $dataAsJson, associative: true);
-        Log::info("Guardamos externSaveData $key --- $value");
-
-        $data[$key] = $value;
-        $dataAsJson = json_encode(value: $data);
-
-        Cache::put("twilio_call_$uuid", $dataAsJson);
-    }
 }
