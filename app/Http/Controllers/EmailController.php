@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Service\TwilioService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Twilio\TwiML\VoiceResponse;
 
 class EmailController extends Controller
@@ -27,6 +28,7 @@ class EmailController extends Controller
     public function checkEmail(Request $request)
     {
         $email = $request->input('SpeechResult') ?? '';
+        Log::info('Email antes de la IA' . $email);
 
         $this->twilio->checkEmail($email);
 

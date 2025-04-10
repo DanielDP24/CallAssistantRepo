@@ -14,7 +14,6 @@ class Incoming extends Controller
     }
     public function askName(Request $request)
     {
-        Log::info('pedimos nombre.');
         
         $callSid = request()->get('CallSid');
         $this->DatabaseController->insertCallSid($callSid);

@@ -18,7 +18,7 @@ class HubSpotController extends Controller
 {
     private $client;
     public string $filePath;
-   
+
 
     public function __construct(private TwilioService $twilio, private DatabaseController $DatabaseController)
     {
@@ -26,44 +26,19 @@ class HubSpotController extends Controller
     }
     public function endCall(Request $request)
     {
-        Log::info('llega a end call');
-    
-        // --- Decodificar inputs ---
-        $uuid = urldecode($request->input('uuid'));
 
         $name = urldecode($request->input('name') ?? 'Vacio, preguntar');
-        $nameGiven = urldecode($request->input('name_given') ?? $name);
-    
         $email = urldecode($request->input('email') ?? 'Vacio, preguntar');
-        $emailGiven = urldecode($request->input('email_given') ?? $email);
-    
         $company = urldecode($request->input('company') ?? 'Vacio, preguntar');
-        $companyGiven = urldecode($request->input('company_given') ?? $company);
-    
         $caller = request()->input('Caller');
+
         $this->DatabaseController->insertField('callerNum', $caller);
 
-        
-        Log::info('datos en END COMPANY', [
-            "\n uuid" => $uuid,
-            "\n name" => $name,
-            "\n nameGiven" => $nameGiven,
-            "\n email" => $email,
-            "\n emailGiven" => $emailGiven,
-            "\n company" => $company,
-            "\n companyGiven" => $companyGiven,
-            "\n caller" => $caller
-        ]);
-        Log::info("lo que sale de recieved es  , " .  $uuid);
-
-    
-        // --- INSERTAR EN data_givens usando el ID del anterior --
-    
         // --- Opcional: acciones adicionales ---
         $this->CreateTicket($email, $name, $caller, $company);
         return $this->RedirectCall($caller);
     }
-    
+
     public function CreateTicket($email, $name, $caller, $company)
     {
         $name = str_replace('_', ' ', $name);
@@ -113,10 +88,8 @@ class HubSpotController extends Controller
         ]);
 
         // Transferimos la llamada en curso al número de destino
-        $dial = $response->dial();
-        $dial->number('+34951125359');
-        Log::info("La response en xmls es esta    $response");
+      //  $dial = $response->dial();
+       // $dial->number('+34951125359');
         return response($response)->header('Content-Type', 'text/xml');
     }
-
 }
