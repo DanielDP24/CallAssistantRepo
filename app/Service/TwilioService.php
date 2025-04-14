@@ -199,6 +199,7 @@ class TwilioService
         - Identify and correct common transcription mistakes in email addresses.
         - Replace spoken words with their correct symbols:
           - "arroba" → "@"
+          - "punto" → "."
           - "punto com" → ".com"
           - "punto es" → ".es"
           - "punto org" → ".org"

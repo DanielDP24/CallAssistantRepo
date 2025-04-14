@@ -15,6 +15,7 @@ class DatabaseController extends Controller
     }
     public function insertField(string $field, $value)
     {
+        $value = strtolower($value);
         $allowedFields = ['name', 'email', 'company','callerNum'];
     
         if (!in_array($field, $allowedFields)) {

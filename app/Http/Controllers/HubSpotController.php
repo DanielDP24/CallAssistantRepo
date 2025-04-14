@@ -87,9 +87,11 @@ class HubSpotController extends Controller
             'rate' => '1'
         ]);
 
-        // Transferimos la llamada en curso al número de destino
-      //  $dial = $response->dial();
-       // $dial->number('+34951125359');
+        // Transferimos la llamada en curso al número de destino +34951125359
+        //$dial = $response->dial();
+        //$dial->number('+34951798775');
+
+        Http::post('http://54.247.29.41:8001/api/repeateCall');
         return response($response)->header('Content-Type', 'text/xml');
     }
 }
