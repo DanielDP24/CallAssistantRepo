@@ -16,10 +16,14 @@ return new class extends Migration
             $table->string('callSid');
             $table->string('name')->nullable();
             $table->string('name_given')->nullable();
+            $table->string('name_accuracy')->nullable();
             $table->string('email')->nullable();
             $table->string('email_given')->nullable();
+            $table->string('email_accuracy')->nullable();
             $table->string('company')->nullable();
             $table->string('company_given')->nullable();
+            $table->string('company_accuracy')->nullable();
+            $table->string('total_accuracy')->nullable();
             $table->string('callerNum')->nullable();
             
         });

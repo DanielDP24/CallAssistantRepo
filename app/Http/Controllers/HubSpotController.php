@@ -79,6 +79,7 @@ class HubSpotController extends Controller
             'rate' => '1'
         ]);
 
+        
         Log::info('Redirigiendo la llamada de ' . $caller . ' a +34 951 12 53 59');
 
         $response->say('Estamos transfiriendo su llamada...', [
@@ -90,6 +91,7 @@ class HubSpotController extends Controller
         // Transferimos la llamada en curso al número de destino +34951125359
         //$dial = $response->dial();
         //$dial->number('+34951798775');
+
 
         Http::post('http://54.247.29.41:8001/api/repeateCall');
         return response($response)->header('Content-Type', 'text/xml');

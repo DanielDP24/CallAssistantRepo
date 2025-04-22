@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\CallLogInfo;
-use Illuminate\Http\Request;
 
 class DatabaseController extends Controller
 {
