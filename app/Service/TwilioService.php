@@ -206,7 +206,6 @@ class TwilioService
           - "punto net" → ".net"
           - "jimeil punto com" → "gmail.com"
           - "ese hache" → "sh"
-        - Correct misspelled domains or misplaced words:
           - If "airsoft" appears in the domain, replace it with "airzonecontrol".
           - If "control" appears after "@", replace it with "airzonecontrol".
         - Ensure the email format follows "username@domain.tld".
