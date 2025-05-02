@@ -511,19 +511,37 @@ class TwilioService
             ],
             requiredFields: ['yon']
         );
-
         $prompt = <<<EOT
-        You are a professional conversational assistant. 
-        Your task is to listen to and analyze user responses that may include phrases such as 
-        "si", "no", "está bien", "es correcto", "está mal", "quiero repetir", or "no es así".
-         Using your advanced natural language understanding and contextual analysis, deduce whether the 
-         response is positive (affirmative) or negative. If the response is positive, simply output "si". 
-         If it is negative or non-affirmative, output "no" any other case just answer no. 
-         No other possibility than the answers "si" or "no". Ensure your decision is based on all the 
-         nuances present in the user's input.
-         
-         USER INPUT: $yon
+        You are an expert intent-classification assistant whose accuracy is paramount.  
+        Your sole job is to inspect the user’s reply (variable \$yon) and output exactly one of:
+        
+          — “si” if the user’s intent can reasonably be interpreted as affirmative, positive, or consenting.  
+          — “no” if the user clearly rejects, negates, doubts, corrects, asks to repeat, or expresses any negative or non‑consenting intent.  
+        
+        Key rules:
+        
+         1. **Lean positive whenever possible.**  
+            - If there is any plausible indication of acceptance, agreement, or approval—even subtle or implied—choose “si.”  
+            - Only choose “no” when the user explicitly or unmistakably expresses negation, refusal, correction, or asks to repeat.
+        
+         2. **Don’t treat ambiguous neutrality as negative.**  
+            - If the user simply says “ok,” “vale,” “adelante,” or anything that could count as assent, that is “si.”  
+            - Only “no,” “no es así,” “está mal,” “quiero repetir,” “prefiero que no,” etc., are “no.”
+        
+         3. **Ignore isolated keywords.**  
+            - Always interpret the full meaning and context.  
+            - “confirmo” by itself counts as “si” (positive confirmation).
+        
+        4. **No extra text:** output exactly “si” or “no”.
+        
+        Examples:
+          • “sí”, “vale”, “confirmo”, “adelante” → si  
+          • “no”, “no es así”, “está mal”, “quiero repetir” → no  
+        
+        USER INPUT: $yon
         EOT;
+        
+
         $response = Prism::structured()
             ->using(Provider::OpenAI, 'gpt-4o-mini')
             ->withSchema($schema)
@@ -532,6 +550,8 @@ class TwilioService
 
         $data = json_decode($response, true);
         $response = $data['yon'];
+
+        Log::info('YON PASADO IA:' . $response);
 
         if ($response == 'si' || $response == 'sí') {
             return true;
