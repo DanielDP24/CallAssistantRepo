@@ -38,6 +38,7 @@ class TwilioService
             speech: 'Por favor, dígame su nombre'
         );
     }
+    
     public function checkName(string $name): void
     {
         //GUARDAMOS NOMBRE TEMPORALMENTE
@@ -77,6 +78,7 @@ class TwilioService
             speech: 'El nombre recibido es ' . $name . ' confirme si es o no correcto'
         );
     }
+
     public function confirmName(string $yon)
     {
         // Obtener contadores y evaluar si es silencio
