@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->string('email_given')->nullable();
             $table->string('email_accuracy')->nullable();
+            $table->string('email_IA_confidence')->nullable();
             $table->string('company')->nullable();
             $table->string('company_given')->nullable();
             $table->string('company_accuracy')->nullable();

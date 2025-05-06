@@ -93,7 +93,7 @@ class HubSpotController extends Controller
         //$dial->number('+34951798775');
 
 
-        Http::post('http://54.247.29.41:8001/api/repeateCall');
+        //Http::post('http://54.247.29.41:8001/api/repeateCall');
         return response($response)->header('Content-Type', 'text/xml');
     }
 }

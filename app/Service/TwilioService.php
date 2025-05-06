@@ -258,9 +258,9 @@ EOT;
         $averageConfidence = count($confidences) > 0 ? array_sum($confidences) / count($confidences) : 0.0;
         $formattedConfidence = number_format($averageConfidence * 100, 2, '.', ''); 
         $this->saveCallData('email_confidence', $formattedConfidence);
-        
-        Log::info("Confianza del modelo sobre email: $averageConfidence");
-        
+        Log::info("Confianza del modelo sobre email: $formattedConfidence");
+        $this->DatabaseController->insertField('email_IA_confidence', $formattedConfidence);
+
         // Parsear JSON extraído
         $parsed = json_decode($jsonExtracted, true);
         $email = $parsed['email'] ?? 'Email Vacio IA';
